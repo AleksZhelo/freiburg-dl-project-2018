@@ -106,3 +106,5 @@ ENV/
 **/*.synctex.gz(busy)
 
 *.bak
+
+/logs
