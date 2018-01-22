@@ -43,7 +43,7 @@ Predicted y over true y for the linear regression model without preprocessing:
 Predicted y over true y for the linear regression model with preprocessing:
 
 \includegraphics[width=0.8\textwidth]{../../figures/baseline_LinearRegression_standardized_predictions} \\
-(side note: is linear regression invariant to scaling and shifting? $\rightarrow$ that would explain why the results are the same)
+(side note: I think linear regression is invariant to scaling and shifting $\rightarrow$ that would explain why the results are the same)
 
 \vspace{0.5cm}
 Predicted y over true y for the autosklearn ensemble without preprocessing:
@@ -61,15 +61,16 @@ Mean CV loss (mean squared error):
  \hline
  model & raw & standardized \\
  \hline
- linear regression & 0.032744 & 0.032744 \\
- autosklearn & 0.012119 & 0.010339 \\
+ linear regression & 0.029270 & 0.029270 \\
+ autosklearn (1 min training) & 0.012119 & 0.010339 \\
+ autosklearn (10 min training) & 0.009157 & xx \\
  \hline
 \end{tabular}
 
 \vspace{0.5cm}
 Keep in mind that autosklearn is randomized.
-I once got a mean CV loss below 0.01 for autosklearn without preprocessing.
-We should probably fix the random seed.\\
+I once got a mean CV loss below 0.01 for autosklearn without preprocessing with 1 min training time.\\
+We should probably fix the random seed for autosklearn and for the k-fold splitting (I get different folds after restarting python).\\
 Most likely autosklearn does preprocessing internally.
 
 
