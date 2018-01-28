@@ -1,0 +1,4 @@
+Implemented early stopping, average cv loss is about 0.045
+Batch normalization:
+	expected an improvement in performance, which actually happened
+	loss improved to about 0.025
