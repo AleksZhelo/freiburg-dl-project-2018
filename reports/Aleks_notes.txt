@@ -1,4 +1,25 @@
-Implemented early stopping, average cv loss is about 0.045
+Batch size observations:
+    a smaller value seems to work better
+
+Implemented early stopping
+    average cv loss is about 0.045
+    actually with high enough patience it seems just early stopping is already very good,
+    about 0.012
+
 Batch normalization:
-	expected an improvement in performance, which actually happened
-	loss improved to about 0.025
+	expected an improvement in performance, but (with early stopping) is worse
+	loss worsened to about 0.035
+
+Testing normalized (zero mean and unit variance in each column):
+    more or less no difference when using early stopping? weird
+
+    even worse with batch norm: about 0.05
+
+Testing L1 regularization:
+    didn't expect an improvement, but actually lowered the loss to about 0.01
+    seems to work about the same regardless of normalization
+
+Tried using ELU instead of ReLU:
+    didn't know what to expect, but suddenly a large improvement
+    loss about 0.0095 regardless of normalization
+    using ELU the L1 regularization no longer makes an improvement (from my experiments)

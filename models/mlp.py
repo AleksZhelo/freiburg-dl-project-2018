@@ -10,7 +10,7 @@ class MLP(object):
         self.input_tensor = input_tensor
         self.target = target
         self.learning_rate = learning_rate
-        self.prediction, self.optimize, self.loss  # lazy initialization
+        self.prediction, self.loss, self.loss_pure, self.optimize  # lazy initialization
 
     @define_scope(initializer=tf.contrib.slim.xavier_initializer())
     def prediction(self):
@@ -26,4 +26,8 @@ class MLP(object):
 
     @define_scope
     def loss(self):
+        return tf.losses.mean_squared_error(self.target, self.prediction)
+
+    @define_scope
+    def loss_pure(self):
         return tf.losses.mean_squared_error(self.target, self.prediction)
