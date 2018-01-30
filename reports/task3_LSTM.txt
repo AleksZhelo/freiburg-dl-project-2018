@@ -1,0 +1,53 @@
+------------
+--- task ---
+------------
+
+evaluate a network with 2 LSTM and 2 Dense layers (64 neurons each) in a 3-fold CV,
+using the config parameters and partial time series of different lengths (5, 10, 20 and random number of steps)
+
+so far, two strategies of how to introduce the config parameters in the time series:
+- each time step provide a vector of length #config_parameters + 1 for the validation error, repeating the config parameters in each time step
+- same, but providing the config parameters only once in the first time step
+
+
+-------------------
+--- expectation ---
+-------------------
+
+- providing more time steps should give better predictions
+- repeating the config parameters each time step might lead to faster learning (since the network does not need to remember it)
+- overall we should be able to achieve better performance than in task 2, because we now use the time series' information
+- especially predicting cases with high validation error should be easy to predict using the first time steps (see the plots of error after k steps vs. final error in reports/dataset_plots)
+
+
+------------------
+--- evaluation ---
+------------------
+
+time steps | epochs | MSE with repetition | MSE without repetition
+------------------------------------------------------------------
+         5 |     10 |             0.03569 |                0.00608 
+         5 |    100 |             0.02364 |                0.00198 
+        10 |     10 |                   x |                0.00241 
+        10 |    100 |                   x |                0.00145 
+        20 |     10 |                   x |                0.00181 
+        20 |    100 |                   x |                0.00076 
+
+
+-------------------
+--- conclusions ---
+-------------------
+
+- using more time steps indeed improve the performance a lot
+- repeating the configuration parameters leads to bad results
+- performance is much better than in task 2
+
+
+------------
+--- TODO ---
+------------
+
+- decouple length of time series used for training and for testing (e.g. train on 5 steps but predict on 10)
+- randomized length
+- baselines
+- we might predict log(y) instead of y in order to achieve better performance on well-performing configurations
