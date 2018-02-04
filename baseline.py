@@ -30,7 +30,7 @@ def main(n_folds=3, preprocessing=False):
     learning_curves = np.array(learning_curves)
     
     # initialise CV
-    k_fold = KFold(n_splits=n_folds)
+    k_fold = KFold(n_splits=n_folds, shuffle=True, random_state=1)
     performances = []
     
     # store predicted and true y

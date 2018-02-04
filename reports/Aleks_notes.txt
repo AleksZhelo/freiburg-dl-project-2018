@@ -23,3 +23,5 @@ Tried using ELU instead of ReLU:
     didn't know what to expect, but suddenly a large improvement
     loss about 0.0095 regardless of normalization
     using ELU the L1 regularization no longer makes an improvement (from my experiments)
+
+export PATH=/home/zheloo/miniconda3/bin:$PATH

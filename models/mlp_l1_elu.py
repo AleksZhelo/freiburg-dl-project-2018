@@ -4,12 +4,19 @@ from models.mlp import MLP
 from util.decorators import define_scope
 
 
-class MLP_L1(MLP):
+class MLP_L1_ELU(MLP):
 
     # noinspection PyStatementEffect
     def __init__(self, input_tensor, target, phase, learning_rate=0.001, reg_weight=0.001):
         self.reg_weight = reg_weight
-        super(MLP_L1, self).__init__(input_tensor, target, phase, learning_rate)
+        super(MLP_L1_ELU, self).__init__(input_tensor, target, phase, learning_rate)
+
+    @define_scope(initializer=tf.contrib.slim.xavier_initializer())
+    def prediction(self):
+        x = tf.layers.dense(inputs=self.input_tensor, units=64, activation=tf.nn.elu)
+        x = tf.layers.dense(inputs=x, units=64, activation=tf.nn.elu)
+        x = tf.layers.dense(inputs=x, units=1, activation=None)
+        return x
 
     @define_scope
     def loss(self):

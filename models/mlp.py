@@ -6,9 +6,10 @@ from util.decorators import define_scope
 class MLP(object):
 
     # noinspection PyStatementEffect
-    def __init__(self, input_tensor, target, learning_rate=0.001):
+    def __init__(self, input_tensor, target, phase, learning_rate=0.001):
         self.input_tensor = input_tensor
         self.target = target
+        self.phase = phase
         self.learning_rate = learning_rate
         self.prediction, self.loss, self.loss_pure, self.optimize  # lazy initialization
 

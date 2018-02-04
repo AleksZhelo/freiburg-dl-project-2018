@@ -6,10 +6,6 @@ from util.decorators import define_scope
 
 class MLP_BN(MLP):
 
-    def __init__(self, input_tensor, target, phase, learning_rate=0.001):
-        self.phase = phase
-        super(MLP_BN, self).__init__(input_tensor, target, learning_rate)
-
     @define_scope(initializer=tf.contrib.slim.xavier_initializer())
     def prediction(self):
         x = tf.layers.dense(inputs=self.input_tensor, units=64, activation=None)
