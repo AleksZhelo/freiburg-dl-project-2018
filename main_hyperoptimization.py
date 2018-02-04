@@ -40,15 +40,16 @@ def run_model(session, log_dir, model_class, normalize, params):
 
     mlp = model_class(input_tensor, target, phase, **params)
 
-    train_summary_writer = tf.summary.FileWriter(
-        '{3}/{0}_{1}_{2}'.format(
-            model_class.__name__,
-            '_'.join(['{0}={1}'.format(a, b) for a, b in zip(params.keys(), params.values())]),
-            datetime.now(),
-            log_dir
-        ),
-        session.graph
-    )
+    if log_dir is not None:
+        train_summary_writer = tf.summary.FileWriter(
+            '{3}/{0}_{1}_{2}'.format(
+                model_class.__name__,
+                '_'.join(['{0}={1}'.format(a, b) for a, b in zip(params.keys(), params.values())]),
+                datetime.now(),
+                log_dir
+            ),
+            session.graph
+        )
 
     x = np.zeros((batch_size, 5), dtype=np.float32)
     y = np.zeros((batch_size, 1), dtype=np.float32)
@@ -58,10 +59,11 @@ def run_model(session, log_dir, model_class, normalize, params):
 
     current_fold = 0
     for train_indices, test_indices in k_fold.split(configs):
-        t_loss_summary = tf.summary.scalar('losses/TrainingLoss_fold:{0}'.format(current_fold),
-                                           mlp.loss)
-        v_loss_summary = tf.summary.scalar('losses/ValidationLoss_fold:{0}'.format(current_fold),
-                                           mlp.loss_pure)
+        if log_dir is not None:
+            t_loss_summary = tf.summary.scalar('losses/TrainingLoss_fold:{0}'.format(current_fold),
+                                               mlp.loss)
+            v_loss_summary = tf.summary.scalar('losses/ValidationLoss_fold:{0}'.format(current_fold),
+                                               mlp.loss_pure)
 
         session.run(tf.global_variables_initializer())
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -88,18 +90,19 @@ def run_model(session, log_dir, model_class, normalize, params):
 
             total_epochs += 1
 
-            if total_epochs % eval_every == 0:
-                sm, t_loss = session.run([t_loss_summary, mlp.loss],
-                                         {mlp.input_tensor: train_configs,
-                                          mlp.target: train_curves[:, -1].reshape(-1, 1),
-                                          phase: 0})
-                train_summary_writer.add_summary(sm, total_epochs)
+            if log_dir is not None:
+                if total_epochs % eval_every == 0:
+                    sm, t_loss = session.run([t_loss_summary, mlp.loss],
+                                             {mlp.input_tensor: train_configs,
+                                              mlp.target: train_curves[:, -1].reshape(-1, 1),
+                                              phase: 0})
+                    train_summary_writer.add_summary(sm, total_epochs)
 
-                sm, ev_loss, pure_loss = session.run([v_loss_summary, mlp.loss, mlp.loss_pure],
-                                                     {mlp.input_tensor: test_configs,
-                                                      mlp.target: test_curves[:, -1].reshape(-1, 1),
-                                                      phase: 0})
-                train_summary_writer.add_summary(sm, total_epochs)
+                    sm, ev_loss, pure_loss = session.run([v_loss_summary, mlp.loss, mlp.loss_pure],
+                                                         {mlp.input_tensor: test_configs,
+                                                          mlp.target: test_curves[:, -1].reshape(-1, 1),
+                                                          phase: 0})
+                    train_summary_writer.add_summary(sm, total_epochs)
 
         performances[current_fold] = session.run(mlp.loss_pure, {mlp.input_tensor: test_configs,
                                                                  mlp.target: test_curves[:, -1].reshape(-1, 1),
@@ -147,7 +150,7 @@ if __name__ == '__main__':
         session = tf.Session(graph=graph)
         with graph.as_default():
             params = sample_params(rs)
-            cv_loss = run_model(session, log_dir, model, normalize, params)
+            cv_loss = run_model(session, None, model, normalize, params)
             results.append((cv_loss, params))
         session.close()
 
