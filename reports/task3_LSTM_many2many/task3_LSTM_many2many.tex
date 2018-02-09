@@ -1,0 +1,57 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+
+%opening
+\title{Task 3: RNN for many to many prediction}
+\author{Matthias}
+
+
+\begin{document}
+
+\maketitle
+
+\section{approach}
+
+Parameters: $n_1$ the length of learning curves for training, $n_2$ the length of learning curves for predictions
+
+\begin{itemize}
+ \item Train an RNN on learning curves of length $n_1$, at each step using the next step as target.
+ \item Provide the configuration at the first step only (alternative: at each step).
+ \item Prediction: feed the first $n_2$ steps of the learning curve into the RNN to predict step $n_2 + 1$.
+ \item Then append the predicted step to the learning curve and feed it into the RNN to predict step $n_2 + 2$.
+ \item Repeat until step 40.
+\end{itemize}
+
+
+\section{expectations}
+
+\begin{itemize}
+ \item increasing $n_1$ should generalise much better
+ \item risk of propagating errors (erronous prediction at step $k$ is fed into the network to predict step $k+1$)
+ \item increasing $n_2$ should reduce this risk
+ \item not sure if predictions for steps $k > n_1$ make sense, when all training sequences only had length $n_1$
+\end{itemize}
+
+
+\section{first insights}
+
+\begin{itemize}
+ \item small $n_1$ or small $n_2$ are both problematic
+ \item if the RNN predicts that the test error increases at step $k$, it increases all the following steps (sometimes even leading to final predictions greater than 1)
+ \item overall it seems a promising method, since training and validation losses get below 0.001 (but that's for the prediction of the first $n_1$ steps
+  of a sequence, not for the final test error!)
+ \item when training on all steps ($n_1 = 40$) and $n_2 = 20$, the test loss for the prediction of the final training error is 0.001403 (after training only 10 epochs),
+  but we should choose $n_1 \in \{5, 10, 20\}$
+\end{itemize}
+
+The following plot shows 10 predicted curves (using the test set of the first CV fold), resulting from training on whole sequences (all 40 steps), and prediction using the first 20 steps
+from the sequence (steps 21 to 40 are predicted by the RNN and then fed back into it to predict the following step):\\
+green = true curve, red = prediction
+
+\includegraphics[width=\textwidth]{../../figures/lstm_many2many_39train-steps_20pred-steps}
+
+So far, the RNN seems to underestimate the error in each step.
+
+\end{document}

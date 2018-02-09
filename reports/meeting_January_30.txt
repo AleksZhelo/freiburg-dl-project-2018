@@ -1,0 +1,14 @@
+questions on task 3 (LSTM)
+- predict step 40 or predict step by step?
+- which baseline to use? -> no RNN, idea: scikit-learn cheatsheet, random forest, svr, knn
+- randomized fixed length or different for each sequence?
+- "whole training data" in a 3-fold CV or everything?
+
+ideas / remarks
+- for Dense layer in task 3 try sth. else than sigmoid activation
+- regularization for RNN
+
+hidden state for RNN
+- idea by Frank: have MLP in the beginning to initialise hidden state
+
+HPO: BO, SMAC, successive halving
