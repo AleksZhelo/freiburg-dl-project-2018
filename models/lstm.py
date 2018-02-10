@@ -1,6 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense, LSTM
 from keras.regularizers import l1
+from keras.optimizers import Adam
 
 nodes = 64
 
@@ -34,5 +35,6 @@ def lstm(d, many2many = False, regularize = False, alpha = 0.01):
     model.add(Dense(1,
                     activation="linear",
                     kernel_regularizer = l1(alpha) if regularize else None))
-    model.compile(loss='mean_squared_error', optimizer='adam')
+    optimizer = Adam()
+    model.compile(loss='mean_squared_error', optimizer=optimizer)
     return model

@@ -54,4 +54,46 @@ green = true curve, red = prediction
 
 So far, the RNN seems to underestimate the error in each step.
 
+
+\section{first results}
+
+The evaluation is made on 1 fold only, training for 200 epochs.
+
+\begin{tabular}{|c|c|c|c|c|c|}
+ \hline
+ $n_{train}$ & $n_{test}$ & training loss & validation loss & final test E40 loss & best test E40 loss (@epoch) \\
+ \hline
+ 5 & 5 & 0.000929 & 0.001588 & 0.145444 & 0.077837 (@149) \\
+ 10 & 10 & 0.000646 & 0.001357 & 0.044646 & 0.005268 (@109) \\
+ 20 & 20 & 0.000535 & 0.000684 & 0.009755 & 0.003154 (@99) \\
+ \hline
+\end{tabular}
+
+
+\section{example curves}
+
+Training and prediction on 5 steps, after training for 150 epochs:
+
+\includegraphics[width=\textwidth]{../../figures/LSTM_m2m_5_steps_epoch_149}
+
+Training and prediction on 5 steps, after training for 200 epochs:
+
+\includegraphics[width=\textwidth]{../../figures/LSTM_m2m_5_steps_epoch_199}
+
+Training and prediction on 10 steps, after training for 110 epochs:
+
+\includegraphics[width=\textwidth]{../../figures/LSTM_m2m_10_steps_epoch_109}
+
+Training and prediction on 10 steps, after training for 200 epochs:
+
+\includegraphics[width=\textwidth]{../../figures/LSTM_m2m_10_steps_epoch_199}
+
+Training and prediction on 20 steps, after training for 110 epochs:
+
+\includegraphics[width=\textwidth]{../../figures/LSTM_m2m_10_steps_epoch_109}
+
+Training and prediction on 20 steps, after training for 200 epochs:
+
+\includegraphics[width=\textwidth]{../../figures/LSTM_m2m_20_steps_epoch_199}
+
 \end{document}
