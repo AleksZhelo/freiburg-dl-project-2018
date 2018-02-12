@@ -107,4 +107,6 @@ ENV/
 
 *.bak
 
-/logs
+**/logs
+**/optimization_results
+/reports/view_results.ipynb

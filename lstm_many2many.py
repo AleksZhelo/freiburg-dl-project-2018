@@ -3,10 +3,10 @@ from sklearn.model_selection import KFold
 
 import matplotlib.pyplot as  plt
 
+from util.common import loss
 from util.loader import load_data
 from util.time_series_data import get_time_series
 from models.lstm import lstm
-from baseline import loss
 
 repeat_config = False
 randomize_length = False

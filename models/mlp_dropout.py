@@ -18,3 +18,10 @@ class MLP_Dropout(MLP):
         x = tf.layers.dropout(x, rate=self.drop_rate, training=self.phase)
         x = tf.layers.dense(inputs=x, units=1, activation=None)
         return x
+
+    @staticmethod
+    def sample_params(rs):
+        return {
+            'learning_rate': 10 ** rs.uniform(-5, -1),
+            'drop_rate': rs.uniform(0, 1)
+        }

@@ -5,15 +5,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 from autosklearn.regression import AutoSklearnRegressor
 
+from util.common import loss
 from util.loader import load_data
-
-def loss(y_hat, y):
-    """
-    Mean squared error.
-    y_hat : predicted values
-    y : true values
-    """
-    return np.mean(np.power(y_hat - y, 2))
 
 def plot_yhat_over_y(y_hat, y):
     plt.plot(y, y_hat, 'x')
@@ -25,7 +18,7 @@ def plot_yhat_over_y(y_hat, y):
 
 def main(n_folds=3, preprocessing=False):
     # read data and transform it to numpy arrays
-    configs, learning_curves = load_data(source_dir='./data')
+    configs, learning_curves = load_data(source_dir='../data')
     configs = np.array(list(map(lambda x: list(x.values()), configs)))
     learning_curves = np.array(learning_curves)
     

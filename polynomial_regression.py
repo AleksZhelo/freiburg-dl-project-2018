@@ -1,13 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import Ridge as Regression
 #from sklearn.kernel_ridge import KernelRidge as Regression
 from sklearn.pipeline import make_pipeline
 
+from util.common import loss
 from util.loader import load_data
-from baseline import loss
 
 class MyFeatures():
     def __init__(self, degree, logarithmic):

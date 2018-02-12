@@ -21,3 +21,10 @@ class MLP_L1(MLP):
         regularization_penalty = tf.contrib.layers.apply_regularization(l1_regularizer, weights)
 
         return tf.losses.mean_squared_error(self.target, self.prediction) + regularization_penalty
+
+    @staticmethod
+    def sample_params(rs):
+        return {
+            'learning_rate': 10 ** rs.uniform(-5, -1),
+            'reg_weight': 10 ** rs.uniform(-5, -2.5)
+        }
