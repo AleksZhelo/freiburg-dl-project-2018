@@ -7,9 +7,12 @@ from util.decorators import define_scope
 class MLP_L1_ELU(MLP):
 
     # noinspection PyStatementEffect
-    def __init__(self, input_tensor, target, phase, learning_rate=0.001, reg_weight=0.001):
+    def __init__(self, input_tensor, target, phase,
+                 learning_rate=0.001, reg_weight=0.001,
+                 exponential_decay=False, decay_steps=None, decay_rate=0.99):
         self.reg_weight = reg_weight
-        super(MLP_L1_ELU, self).__init__(input_tensor, target, phase, learning_rate)
+        super(MLP_L1_ELU, self).__init__(input_tensor, target, phase, learning_rate,
+                                         exponential_decay, decay_steps, decay_rate)
 
     @define_scope(initializer=tf.contrib.slim.xavier_initializer())
     def prediction(self):

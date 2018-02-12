@@ -12,16 +12,20 @@ Batch normalization:
 
 Testing normalized (zero mean and unit variance in each column):
     more or less no difference when using early stopping? weird
-
     even worse with batch norm: about 0.05
+
+    disregard all above, helps by about an order of magnitude
+    dues to a typo was always on
 
 Testing L1 regularization:
     didn't expect an improvement, but actually lowered the loss to about 0.01
-    seems to work about the same regardless of normalization
 
 Tried using ELU instead of ReLU:
     didn't know what to expect, but suddenly a large improvement
     loss about 0.0095 regardless of normalization
     using ELU the L1 regularization no longer makes an improvement (from my experiments)
+
+Exponential learning rate decay:
+    don't expect an improvement with RMSProp, since it scales the learning rate internally already
 
 export PATH=/home/zheloo/miniconda3/bin:$PATH

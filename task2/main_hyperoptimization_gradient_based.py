@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import gc
 import json
 import os
 from datetime import datetime
@@ -15,16 +16,19 @@ from util.loader import load_data_as_numpy
 
 
 def evaluate_model(x, *args):  # TODO: correct usage of *args?
-    graph = tf.Graph()  # TODO: leaks memory, rewrite to avoid
-    session = tf.Session(graph=graph)
-    with graph.as_default():
+    with tf.Session() as session:
         # dct = {'learning_rate': x[0], 'reg_weight': x[1], 'drop_rate': x[2]}
         dct = {'learning_rate': x[0], 'reg_weight': x[1]}
+        if decay_lr:
+            dct['exponential_decay'] = True
+            dct['decay_rate'] = x[2]
+            dct['decay_steps'] = configs.shape[0] / batch_size
+
         cv_loss = run_model(session, configs, learning_curves, None,
                             model, normalize, train_epochs, batch_size, eval_every, dct)
         results.append((cv_loss, dct))
-    session.close()
     tf.reset_default_graph()
+    gc.collect()  # TODO: still leaks memory, but less?
     return cv_loss
 
 
@@ -41,6 +45,7 @@ if __name__ == '__main__':
     patience = 40
     eval_every = 4
     normalize = True
+    decay_lr = True
     run_time = 3600
 
     model = MLP_L1
@@ -52,10 +57,11 @@ if __name__ == '__main__':
     scipy.optimize.minimize(
         # evaluate_model, x0=np.array([0.0009130585273711927, 0.00024719478144616294, 0.10526187]),
         # evaluate_model, x0=np.array([0.000075, 0.00001]),
-        evaluate_model, x0=np.array([0.0004807115923157915, 0.004885703203107214]),
+        # does not seem to work with the decay
+        evaluate_model, x0=np.array([0.0004807115923157915, 0.004885703203107214, 0.75]),
         # method='TNC', bounds=((0, 1), (0, 1), (0, 0.5)),
-        # method='L-BFGS-B', bounds=((0, 1), (0, 1), (0, 0.5)),
-        method='TNC', bounds=((0, 1), (0, 1)),
+        method='L-BFGS-B', bounds=((0, 1), (0, 1), (0.25, 1.0)),
+        # method='TNC', bounds=((0.0, 1.0), (0.0, 1.0), (0.25, 1.0)),
         # options={'disp': True, 'maxfun': 3000, 'eps': 1e-05}
         # options={'disp': True, 'maxfun': 3000, 'eps': 1e-06}
         options={'disp': True, 'eps': 0.5 * 1e-04}

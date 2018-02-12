@@ -6,9 +6,12 @@ from util.decorators import define_scope
 
 class MLP_Dropout(MLP):
 
-    def __init__(self, input_tensor, target, phase, learning_rate=0.001, drop_rate=0.1):
+    def __init__(self, input_tensor, target, phase,
+                 learning_rate=0.001, drop_rate=0.1,
+                 exponential_decay=False, decay_steps=None, decay_rate=0.99):
         self.drop_rate = drop_rate
-        super(MLP_Dropout, self).__init__(input_tensor, target, phase, learning_rate)
+        super(MLP_Dropout, self).__init__(input_tensor, target, phase, learning_rate,
+                                          exponential_decay, decay_steps, decay_rate)
 
     @define_scope(initializer=tf.contrib.slim.xavier_initializer())
     def prediction(self):
