@@ -1,0 +1,8 @@
+Tasks:
+    more hyperoptimization: successive halving/hyperband (Aleks)
+    improving the LSTM network: normalization, ReLU units, predicting change in performance
+    for a step instead of the raw value (Matthias)
+    ensembles
+    try SGD/SGD+Momentum and the exponential learning rate decay for a comparison with RMSProp
+    task 3 baselines: MLP, SVR, KNN
+    baseline from last point of task 3
