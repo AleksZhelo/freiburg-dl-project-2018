@@ -19,11 +19,19 @@ Testing normalized (zero mean and unit variance in each column):
 
 Testing L1 regularization:
     didn't expect an improvement, but actually lowered the loss to about 0.01
+    overall seems to be the best so far, with loss of ~0.00622
 
 Tried using ELU instead of ReLU:
     didn't know what to expect, but suddenly a large improvement
     loss about 0.0095 regardless of normalization
     using ELU the L1 regularization no longer makes an improvement (from my experiments)
+
+Dropout:
+    overall not useful
+    try on last layer only
+
+DeCov:
+    expect to be on par with dropout
 
 Exponential learning rate decay:
     don't expect an improvement with RMSProp, since it scales the learning rate internally already

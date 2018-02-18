@@ -8,7 +8,8 @@ from datetime import datetime
 import numpy as np
 import tensorflow as tf
 
-from models.mlp_l1_dropout import MLP_L1_Dropout
+from models.mlp_decov import MLP_DeCov
+from models.mlp_l1_sgd import MLP_L1_SGD
 from task2.run_model import run_model
 from util.common import ensure_dir
 from util.loader import load_data_as_numpy
@@ -41,9 +42,9 @@ if __name__ == '__main__':
     eval_every = 4
     normalize = True
     decay_lr = True
-    run_time = 2 * 3600
+    run_time = 3 * 3600
 
-    model = MLP_L1_Dropout
+    model = MLP_L1_SGD
     rs = np.random.RandomState(1)
     results = []
 

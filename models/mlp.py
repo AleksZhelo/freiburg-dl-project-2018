@@ -16,16 +16,14 @@ class MLP(object):
         self.exponential_decay = exponential_decay
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
+        self.last_hidden = None
         self.prediction, self.loss, self.loss_pure, self.optimize  # lazy initialization
 
-    # TODO: figure out scopes, how this annotation works, and what is the proper initializer
-    # for both weights and biases!
     @define_scope(initializer=tf.contrib.slim.xavier_initializer(seed=1))
-    # @define_scope(initializer=tf.constant_initializer(0.01))  # significantly worse, wow
     def prediction(self):
         x = tf.layers.dense(inputs=self.input_tensor, units=64, activation=tf.nn.relu)
-        x = tf.layers.dense(inputs=x, units=64, activation=tf.nn.relu)
-        x = tf.layers.dense(inputs=x, units=1, activation=None)
+        self.last_hidden = tf.layers.dense(inputs=x, units=64, activation=tf.nn.relu)
+        x = tf.layers.dense(inputs=self.last_hidden, units=1, activation=None)
         return x
 
     @define_scope
@@ -34,9 +32,12 @@ class MLP(object):
             self.global_step = tf.Variable(0, trainable=False)
             self.learning_rate = tf.train.exponential_decay(self.learning_rate, self.global_step,
                                                             self.decay_steps, self.decay_rate,
-                                                            staircase=False)  # TODO: try True?
-        optimizer = tf.train.RMSPropOptimizer(self.learning_rate)
+                                                            staircase=True)  # TODO: compare
+        optimizer = self._optimizer(self.learning_rate)
         return optimizer.minimize(self.loss, global_step=self.global_step)
+
+    def _optimizer(self, lr):
+        return tf.train.RMSPropOptimizer(lr)
 
     @define_scope
     def loss(self):

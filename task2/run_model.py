@@ -71,7 +71,6 @@ def run_model(session, configs, learning_curves, log_dir,
                 curr_steps += 1
 
             total_epochs += 1
-
             if log_dir is not None:
                 if total_epochs % eval_every == 0:
                     sm, t_loss = session.run([t_loss_summary, mlp.loss],

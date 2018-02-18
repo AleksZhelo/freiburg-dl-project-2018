@@ -9,6 +9,7 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
+from models.mlp_decov import MLP_DeCov
 from models.mlp_l1 import MLP_L1
 from task2.run_model import run_model
 from util.common import ensure_dir
@@ -45,10 +46,10 @@ if __name__ == '__main__':
     patience = 40
     eval_every = 4
     normalize = True
-    decay_lr = True
+    decay_lr = False
     run_time = 3600
 
-    model = MLP_L1
+    model = MLP_DeCov
     rs = np.random.RandomState(1)
     results = []
 
@@ -56,11 +57,11 @@ if __name__ == '__main__':
 
     scipy.optimize.minimize(
         # evaluate_model, x0=np.array([0.0009130585273711927, 0.00024719478144616294, 0.10526187]),
-        # evaluate_model, x0=np.array([0.000075, 0.00001]),
+        evaluate_model, x0=np.array([0.000075, 0.5]),
         # does not seem to work with the decay
-        evaluate_model, x0=np.array([0.0004807115923157915, 0.004885703203107214, 0.75]),
-        # method='TNC', bounds=((0, 1), (0, 1), (0, 0.5)),
-        method='L-BFGS-B', bounds=((0, 1), (0, 1), (0.25, 1.0)),
+        # evaluate_model, x0=np.array([0.0004807115923157915, 0.004885703203107214, 0.75]),
+        method='TNC', bounds=((0, 1), (0, 1)),
+        # method='L-BFGS-B', bounds=((0, 1), (0, 1), (0.25, 1.0)),
         # method='TNC', bounds=((0.0, 1.0), (0.0, 1.0), (0.25, 1.0)),
         # options={'disp': True, 'maxfun': 3000, 'eps': 1e-05}
         # options={'disp': True, 'maxfun': 3000, 'eps': 1e-06}
