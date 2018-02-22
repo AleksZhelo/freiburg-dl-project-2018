@@ -22,7 +22,11 @@ class MLP_DeCov(MLP):
         cov = tf.matmul(tf.transpose(v), v)
         regularization_penalty = 0.5 * (tf.square(tf.norm(cov)) - tf.square(tf.norm(tf.diag_part(cov))))
 
-        return tf.losses.mean_squared_error(self.target, self.prediction) + self.reg_weight * regularization_penalty
+        # TODO: small values of reg_weight lead to NaNs
+        if self.reg_weight > 0:
+            return tf.losses.mean_squared_error(self.target, self.prediction) + self.reg_weight * regularization_penalty
+        else:
+            return tf.losses.mean_squared_error(self.target, self.prediction)
 
     @staticmethod
     def sample_params(rs):

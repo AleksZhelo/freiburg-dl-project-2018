@@ -12,7 +12,7 @@ import tensorflow as tf
 from models.mlp_decov import MLP_DeCov
 from models.mlp_l1 import MLP_L1
 from task2.run_model import run_model
-from util.common import ensure_dir
+from util.common import ensure_dir, date2str
 from util.loader import load_data_as_numpy
 
 
@@ -42,12 +42,11 @@ if __name__ == '__main__':
     configs, learning_curves = load_data_as_numpy()
 
     batch_size = 12
-    train_epochs = 100  # was 300
+    train_epochs = 200  # was 100 and 300
     patience = 40
     eval_every = 4
     normalize = True
-    decay_lr = False
-    run_time = 3600
+    decay_lr = True
 
     model = MLP_DeCov
     rs = np.random.RandomState(1)
@@ -57,17 +56,19 @@ if __name__ == '__main__':
 
     scipy.optimize.minimize(
         # evaluate_model, x0=np.array([0.0009130585273711927, 0.00024719478144616294, 0.10526187]),
-        evaluate_model, x0=np.array([0.000075, 0.5]),
+        # evaluate_model, x0=np.array([0.000075, 0.5]),
         # does not seem to work with the decay
-        # evaluate_model, x0=np.array([0.0004807115923157915, 0.004885703203107214, 0.75]),
-        method='TNC', bounds=((0, 1), (0, 1)),
-        # method='L-BFGS-B', bounds=((0, 1), (0, 1), (0.25, 1.0)),
+        evaluate_model, x0=np.array([0.055452050497789306, 0.00012166690604384787, 0.7818553408638547]),
+        # method='TNC', bounds=((0, 1), (0, 1)),
+        method='L-BFGS-B', bounds=((0, 1), (0, 1), (0.25, 1.0)),
         # method='TNC', bounds=((0.0, 1.0), (0.0, 1.0), (0.25, 1.0)),
         # options={'disp': True, 'maxfun': 3000, 'eps': 1e-05}
         # options={'disp': True, 'maxfun': 3000, 'eps': 1e-06}
-        options={'disp': True, 'eps': 0.5 * 1e-04}
+        # options={'disp': True, 'eps': 0.5 * 1e-04}
+        options={'disp': True, 'eps': 1e-06}
     )
 
     # TODO: write after every iteration
-    with open(os.path.join(res_dir, '{0}_{1}'.format(model.__name__, datetime.now())), 'w') as f:
+    with open(os.path.join(res_dir, '{0}_gradient_{1}'.format(
+            model.__name__, date2str(datetime.now()))), 'w') as f:
         json.dump(results, f)

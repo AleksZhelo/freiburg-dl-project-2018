@@ -11,6 +11,10 @@ from util.common import normalized, fill_batch
 def run_model(session, configs, learning_curves, log_dir,
               model_class, normalize, train_epochs, batch_size, eval_every, params,
               tf_seed=1123, numpy_seed=1123, verbose=True):
+    if batch_size is None:
+        batch_size = params['batch_size']
+        params = dict(params)
+        del params['batch_size']
     num_train_samples = configs.shape[0]
     epoch_steps = num_train_samples / batch_size
 

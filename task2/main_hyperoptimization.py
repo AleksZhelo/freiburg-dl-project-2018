@@ -11,7 +11,7 @@ import tensorflow as tf
 from models.mlp_decov import MLP_DeCov
 from models.mlp_l1_sgd import MLP_L1_SGD
 from task2.run_model import run_model
-from util.common import ensure_dir
+from util.common import ensure_dir, date2str
 from util.loader import load_data_as_numpy
 
 
@@ -54,5 +54,6 @@ if __name__ == '__main__':
         evaluate_model_random_search()
 
     # TODO: write after every iteration
-    with open(os.path.join(res_dir, '{0}_{1}'.format(model.__name__, datetime.now())), 'w') as f:
+    with open(os.path.join(res_dir, '{0}_{1}'.format(
+            model.__name__, date2str(datetime.now()))), 'w') as f:
         json.dump(results, f)

@@ -43,7 +43,8 @@ if __name__ == '__main__':
                 f.seek(0)
                 data = parse_old_format(f.readlines())
 
-        data = np.array(data)
+        data = np.array(data) if 'hyperband' not in os.path.basename(file) else np.array([(d['loss'], d) for d in data])
         data = data[np.argsort(data[:, 0])]
         print('----------{0}----------'.format(file))
+        print('model evaluations: {0}'.format(data.shape[0]))
         print(data[:10])

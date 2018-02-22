@@ -8,6 +8,10 @@ def ensure_dir(directory):
         os.makedirs(directory)
 
 
+def date2str(date):
+    return date.strftime('%Y-%m-%d_%H_%M_%S')
+
+
 def fill_batch(x, y, configs_, curves_, rs):
     for i in range(x.shape[0]):
         index = rs.randint(0, configs_.shape[0])
