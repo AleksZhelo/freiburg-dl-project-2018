@@ -49,7 +49,6 @@ if __name__ == '__main__':
     decay_lr = True
 
     model = MLP_DeCov
-    rs = np.random.RandomState(1)
     results = []
 
     start = datetime.now()

@@ -45,7 +45,7 @@ if __name__ == '__main__':
     run_time = 3 * 3600
 
     model = MLP_L1_SGD
-    rs = np.random.RandomState(1)
+    rs = np.random.RandomState()
     results = []
 
     start = datetime.now()

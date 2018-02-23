@@ -5,6 +5,8 @@ import math
 
 
 # TODO: comment cryptic variable names
+# TODO: hyperband is not very good at optimizing the learning rate
+# http://fastml.com/tuning-hyperparams-fast-with-hyperband/
 class Hyperband(object):
 
     def __init__(self, sample_params_function, run_model_function,

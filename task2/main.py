@@ -4,6 +4,7 @@ import os
 
 import tensorflow as tf
 
+from models.mlp_decov import MLP_DeCov
 from models.mlp_l1 import MLP_L1
 from task2.run_model import run_model
 from util.common import ensure_dir
@@ -20,7 +21,7 @@ patience = 40
 eval_every = 4
 normalize = True
 
-model = MLP_L1
+model = MLP_DeCov
 
 with tf.Session() as session:
     params = dict(learning_rate=0.0012907988958460479, reg_weight=0.0010125179006881145)

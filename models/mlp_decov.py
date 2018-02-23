@@ -23,6 +23,8 @@ class MLP_DeCov(MLP):
         regularization_penalty = 0.5 * (tf.square(tf.norm(cov)) - tf.square(tf.norm(tf.diag_part(cov))))
 
         # TODO: small values of reg_weight lead to NaNs
+        # actually not necessarily small values
+        # https://github.com/tensorflow/tensorflow/issues/12071 - ?
         if self.reg_weight > 0:
             return tf.losses.mean_squared_error(self.target, self.prediction) + self.reg_weight * regularization_penalty
         else:

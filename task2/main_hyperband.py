@@ -52,10 +52,10 @@ if __name__ == '__main__':
     eval_every = 4
     normalize = True
     decay_lr = False
-    run_time = 1 * 3600
+    run_time = 2 * 3600
 
-    model = MLP_L1_ELU
-    rs = np.random.RandomState(1)
+    model = MLP_DeCov
+    rs = np.random.RandomState()
     hyperband = Hyperband(gen_sample_params(model, decay_lr, rs),
                           evaluate_model, max_epochs=max_epochs, reduction_factor=3)
 
