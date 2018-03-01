@@ -1,0 +1,22 @@
+task 2:
+- exponential schedule had no effect
+- autosklearn has to be re-run for more time
+- use different regularization rates for each layer
+- baselines: try the baseline models from task 3 on data from task 2
+- shuffle data for each epoch
+
+hyperband:
+- idea: visualize which brackets perform best, repeat those more times
+- make number of units, activation function and regularizer hyperparameters as well
+- try early stopping for hyperband
+
+task 3:
+- fluctuating extrapolation error, how to decide when to stop training / which model to return? can we retrain on the whole training data?
+- try Adam or RMSProp
+- baseline: predict last step from first k steps + config
+- initialise the hidden state from the config using an MLP, then run LSTM on time series
+- use hyperband to optimize hyperparameters (optimize training first to make it faster)
+- tensorboard + pool computers
+
+further ideas:
+- look into Bayesian Optimization
