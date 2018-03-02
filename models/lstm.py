@@ -35,7 +35,7 @@ def lstm(d, lr, decay = 0, many2many = False, regularize = False, alpha = 0.01, 
     model.add(Dense(1,
                     activation="sigmoid",
                     kernel_regularizer = l1(alpha) if regularize else None))
-    optimizer = SGD(lr=lr, decay = decay)
+    optimizer = Adam(lr=lr, decay = decay)
     model.compile(loss='mean_squared_error', optimizer=optimizer)
     return model
 
