@@ -283,9 +283,9 @@ def task3(config,
     return means_e40
 
 if __name__ == "__main__":
-    randomize_length = False
-    n_steps = 10
-    epochs = 1
+    randomize_length = True
+    n_steps = 20
+    epochs = 200
     logfile = "logs/random_search_%s_%ie_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
                                                    epochs,
                                                    current_time_str())
