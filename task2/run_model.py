@@ -67,11 +67,11 @@ def run_model(session, configs, learning_curves, log_dir,
         total_epochs = 0
         curr_steps = 0
         while total_epochs < train_epochs:
-            for _ in range(epoch_steps):
+            for _ in range(int(epoch_steps)):
                 x, y = fill_batch(x, y, train_configs, train_curves, rs_)
-                loss, _, _ = session.run([mlp.loss, mlp.optimize, update_ops], {mlp.input_tensor: x,
-                                                                                mlp.target: y,
-                                                                                phase: 1})
+                loss, _, _, = session.run([mlp.loss, mlp.optimize, update_ops], {mlp.input_tensor: x,
+                                                                                 mlp.target: y,
+                                                                                 phase: 1})
                 curr_steps += 1
 
             total_epochs += 1

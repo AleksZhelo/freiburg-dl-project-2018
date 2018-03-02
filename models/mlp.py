@@ -16,13 +16,14 @@ class MLP(object):
         self.exponential_decay = exponential_decay
         self.decay_steps = decay_steps
         self.decay_rate = decay_rate
+        self.first_hidden = None
         self.last_hidden = None
         self.prediction, self.loss, self.loss_pure, self.optimize  # lazy initialization
 
     @define_scope(initializer=tf.contrib.slim.xavier_initializer(seed=1))
     def prediction(self):
-        x = tf.layers.dense(inputs=self.input_tensor, units=64, activation=tf.nn.relu)
-        self.last_hidden = tf.layers.dense(inputs=x, units=64, activation=tf.nn.relu)
+        self.first_hidden = tf.layers.dense(inputs=self.input_tensor, units=64, activation=tf.nn.relu)
+        self.last_hidden = tf.layers.dense(inputs=self.first_hidden, units=64, activation=tf.nn.relu)
         x = tf.layers.dense(inputs=self.last_hidden, units=1, activation=None)
         return x
 

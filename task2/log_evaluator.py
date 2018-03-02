@@ -17,6 +17,12 @@ def parse_args():
         help='The optimization log files to process.'
     )
 
+    parser.add_argument(
+        '--summary',
+        action='store_true',
+        help='Shows overall best configurations if this flag is set.'
+    )
+
     return parser.parse_args()
 
 
@@ -35,6 +41,7 @@ if __name__ == '__main__':
             args.files.remove(path)
             args.files.extend([os.path.join(path, file) for file in os.listdir(path)])
 
+    total_data = []
     for file in args.files:
         with open(file, 'r') as f:
             try:
@@ -43,8 +50,26 @@ if __name__ == '__main__':
                 f.seek(0)
                 data = parse_old_format(f.readlines())
 
-        data = np.array(data) if 'hyperband' not in os.path.basename(file) else np.array([(d['loss'], d) for d in data])
-        data = data[np.argsort(data[:, 0])]
-        print('----------{0}----------'.format(file))
-        print('model evaluations: {0}'.format(data.shape[0]))
-        print(data[:10])
+        if 'hyperband' in os.path.basename(file):
+            data = [(d['loss'], d, file) for d in data] if args.summary else [(d['loss'], d) for d in data]
+        else:
+            data = [(d[0], d[1], file) for d in data] if args.summary else data
+
+        if args.summary:
+            total_data.extend(data)
+        else:
+            data = np.array(data)
+            data = data[np.argsort(data[:, 0])]
+            print('----------{0}----------'.format(file))
+            print('model evaluations: {0}'.format(data.shape[0]))
+            print(data[:10])
+
+    if args.summary:
+        total_data = np.array(total_data)
+        total_data = total_data[np.argsort(total_data[:, 0])]
+        for k, entry in enumerate(total_data[:30]):
+            print('top {1} loss: {0:.6f}'.format(entry[0], k + 1))
+            print('file: {0}'.format(entry[2]))
+            print('config: {0}'.format(entry[1]))
+            print()
+

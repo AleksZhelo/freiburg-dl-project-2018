@@ -80,6 +80,7 @@ for train_indices, test_indices in k_fold.split(configs):
 print('mean CV performance: {0}'.format(performances.mean(axis=0)))
 
 steps = test_curves.shape[1]
+fig = plt.figure(figsize=(10, 10))
 for i, idx in enumerate(np.random.choice(np.arange(0, test_configs.shape[0]), 20)):
     y_hat = predict_curve(clf, test_configs[idx], test_curves[idx, :4], steps)
 

@@ -17,14 +17,11 @@ class MLP_DeCov(MLP):
     @define_scope
     def loss(self):
         # TODO: try on first hidden?
-        mean_activation = tf.reduce_mean(self.last_hidden, axis=0)
-        v = self.last_hidden - mean_activation
+        mean_activation = tf.reduce_mean(self.first_hidden, axis=0)
+        v = self.first_hidden - mean_activation
         cov = tf.matmul(tf.transpose(v), v)
-        regularization_penalty = 0.5 * (tf.square(tf.norm(cov)) - tf.square(tf.norm(tf.diag_part(cov))))
+        regularization_penalty = 0.5 * (tf.reduce_sum(tf.square(cov)) - tf.reduce_sum(tf.square(tf.diag_part(cov))))
 
-        # TODO: small values of reg_weight lead to NaNs
-        # actually not necessarily small values
-        # https://github.com/tensorflow/tensorflow/issues/12071 - ?
         if self.reg_weight > 0:
             return tf.losses.mean_squared_error(self.target, self.prediction) + self.reg_weight * regularization_penalty
         else:

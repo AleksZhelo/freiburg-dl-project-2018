@@ -19,7 +19,7 @@ class Hyperband(object):
         self.s_max = int(math.floor(math.log(self.R, self.eta)))
         self.B = (self.s_max + 1) * self.R
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, dry_run=False):
         def log(*args, **kwargs):
             if verbose:
                 print(*args, **kwargs)
@@ -33,18 +33,18 @@ class Hyperband(object):
 
             log("n: {0}, r: {1}".format(n, r))
 
-            T = np.array([self.sample_params() for _ in range(n)])
+            T = np.array([self.sample_params() for _ in range(n)]) if not dry_run else None
             for i in range(0, s + 1):
                 n_i = math.ceil(n * self.eta ** (-i))
                 r_i = r * self.eta ** i
                 runs_total += n_i
                 log("n_{2}: {0}, r_{2}: {1}".format(n_i, r_i, i))
-                L = np.array([self.run_model(params, r_i) for params in T])
-                idx = np.argsort(L)
-                T = T[idx[:int(math.ceil(n_i / self.eta))]]
+                L = np.array([self.run_model(params, r_i) for params in T]) if not dry_run else None
+                idx = np.argsort(L) if not dry_run else None
+                T = T[idx[:int(math.ceil(n_i / self.eta))]] if not dry_run else None
                 log("keeping: {0}".format(math.ceil(n_i / self.eta)))
-                L = L[idx]
-                for config, loss in zip(T, L):
+                L = L[idx] if not dry_run else None
+                for config, loss in (zip(T, L) if not dry_run else []):
                     results_total.append(dict(loss=loss, epochs=r_i, config=config))
 
         log("runs total: {0}".format(runs_total))
@@ -52,5 +52,5 @@ class Hyperband(object):
 
 
 if __name__ == "__main__":
-    hyperband = Hyperband(None, None)
-    hyperband.run(verbose=True)
+    hyperband = Hyperband(None, None, max_epochs=300, reduction_factor=3)
+    hyperband.run(verbose=True, dry_run=True)
