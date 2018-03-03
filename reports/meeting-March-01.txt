@@ -20,3 +20,6 @@ task 3:
 
 further ideas:
 - look into Bayesian Optimization
+
+baselines (Alex):
+- better report format, so that the results could be compared more easily

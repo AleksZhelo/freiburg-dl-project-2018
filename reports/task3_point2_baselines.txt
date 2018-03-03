@@ -1,0 +1,103 @@
+The losses are the mean square errors for predictions of the final error rate
+using the normalized config and a fixed number of observations, specifically [5, 10, 20, 30]
+
+GradientBoostingRegressor(learning_rate=0.033, n_estimators=300)
+fold 0 loss: [0.000803 0.000505 0.000317 0.000246]
+fold 1 loss: [0.000683 0.000613 0.000337 0.000262]
+fold 2 loss: [0.001488 0.001243 0.00087  0.00065 ]
+mean CV performance: [0.000991 0.000787 0.000508 0.000386]
+
+linear_model.SGDRegressor(loss='squared_loss')
+fold 0 loss: [0.012532 0.007488 0.003686 0.001714]
+fold 1 loss: [0.020939 0.012425 0.005505 0.003489]
+fold 2 loss: [0.01155  0.006685 0.003206 0.001656]
+mean CV performance: [0.015007 0.008866 0.004133 0.002286]
+
+linear_model.SGDRegressor(loss='epsilon_insensitive', epsilon=0.005)
+fold 0 loss: [0.010384 0.004504 0.001569 0.000591]
+fold 1 loss: [0.01834  0.011023 0.001799 0.000622]
+fold 2 loss: [0.01127  0.004484 0.001325 0.000873]
+mean CV performance: [0.013332 0.00667  0.001564 0.000695]
+
+linear_model.LinearRegression()
+fold 0 loss: [0.002634 0.001184 0.000454 0.000344]
+fold 1 loss: [0.002904 0.001351 0.000518 0.000364]
+fold 2 loss: [0.002776 0.001681 0.000618 0.000635]
+mean CV performance: [0.002771 0.001405 0.00053  0.000447]
+
+linear_model.Ridge(alpha=0.1)
+fold 0 loss: [0.002528 0.001152 0.000358 0.000199]
+fold 1 loss: [0.003419 0.001462 0.00052  0.000301]
+fold 2 loss: [0.002968 0.001649 0.000657 0.000471]
+mean CV performance: [0.002972 0.001421 0.000512 0.000324]
+
+RandomForestRegressor(n_estimators=30)
+fold 0 loss: [0.000836 0.000475 0.000267 0.000205]
+fold 1 loss: [0.000952 0.000757 0.000403 0.000285]
+fold 2 loss: [0.001467 0.001456 0.000892 0.000881]
+mean CV performance: [0.001085 0.000896 0.000521 0.000457]
+
+SVR(C=2.0, kernel='linear', epsilon=0.005)
+fold 0 loss: [0.002734 0.001268 0.000385 0.000179]
+fold 1 loss: [0.00438  0.001401 0.000521 0.000314]
+fold 2 loss: [0.00328  0.001759 0.00062  0.000516]
+mean CV performance: [0.003465 0.001476 0.000509 0.000336]
+
+BaggingRegressor()
+fold 0 loss: [0.000975 0.000557 0.00025  0.000192]
+fold 1 loss: [0.001057 0.000945 0.000525 0.000298]
+fold 2 loss: [0.001729 0.00157  0.000926 0.000766]
+mean CV performance: [0.001253 0.001024 0.000567 0.000419]
+
+
+---------------------------------------------------------------------------------------
+Same without using the config (predicting only using the observations)
+Interestingly, the results are not that much different, and for some models even better
+
+GradientBoostingRegressor(learning_rate=0.033, n_estimators=300)
+fold 0 loss: [0.00121  0.000738 0.000334 0.000276]
+fold 1 loss: [0.00117  0.000934 0.000355 0.000269]
+fold 2 loss: [0.00178  0.00146  0.000851 0.000624]
+mean CV performance: [0.001386 0.001044 0.000514 0.00039 ]
+
+linear_model.SGDRegressor(loss='squared_loss')
+fold 0 loss: [0.012455 0.007584 0.003194 0.001983]
+fold 1 loss: [0.022005 0.013242 0.006304 0.003554]
+fold 2 loss: [0.012212 0.007244 0.003551 0.002124]
+mean CV performance: [0.015557 0.009357 0.00435  0.002554]
+
+linear_model.SGDRegressor(loss='epsilon_insensitive', epsilon=0.005)
+fold 0 loss: [0.009034 0.004833 0.000862 0.000362]
+fold 1 loss: [0.018254 0.008709 0.001968 0.000593]
+fold 2 loss: [0.010346 0.005303 0.001444 0.000778]
+mean CV performance: [0.012545 0.006282 0.001425 0.000578]
+
+linear_model.LinearRegression()
+fold 0 loss: [0.003223 0.00156  0.000569 0.000377]
+fold 1 loss: [0.003774 0.00178  0.000632 0.000426]
+fold 2 loss: [0.003128 0.00195  0.000739 0.000737]
+mean CV performance: [0.003375 0.001763 0.000647 0.000513]
+
+linear_model.Ridge(alpha=0.1)
+fold 0 loss: [0.002915 0.001503 0.000479 0.000233]
+fold 1 loss: [0.004394 0.001992 0.00065  0.000368]
+fold 2 loss: [0.00339  0.001883 0.000686 0.000494]
+mean CV performance: [0.003566 0.001793 0.000605 0.000365]
+
+RandomForestRegressor(n_estimators=30)
+fold 0 loss: [0.00109  0.000638 0.000314 0.000188]
+fold 1 loss: [0.001147 0.00101  0.000405 0.000275]
+fold 2 loss: [0.001648 0.001645 0.000893 0.000599]
+mean CV performance: [0.001295 0.001098 0.000537 0.000354]
+
+SVR(C=2.0, kernel='linear', epsilon=0.005)
+fold 0 loss: [0.003528 0.001561 0.000477 0.00018 ]
+fold 1 loss: [0.006319 0.003054 0.000638 0.00036 ]
+fold 2 loss: [0.003801 0.001832 0.000728 0.000581]
+mean CV performance: [0.004549 0.002149 0.000614 0.000374]
+
+BaggingRegressor()
+fold 0 loss: [0.001056 0.000716 0.000302 0.000278]
+fold 1 loss: [0.001276 0.000959 0.00049  0.000278]
+fold 2 loss: [0.001964 0.00167  0.000974 0.000967]
+mean CV performance: [0.001432 0.001115 0.000589 0.000507]
