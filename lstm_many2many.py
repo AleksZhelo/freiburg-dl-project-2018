@@ -12,6 +12,7 @@ from util.loader import load_data
 from util.time_series_data import get_time_series, reshape_X, reshape_y
 from models.lstm import lstm, small_lstm
 from util.common import loss
+from util.tensorboard import tensorboard_log_values
 from preprocessing.standard_scaler import StandardScaler
 from preprocessing.augmentation import add_nontraining_time_series, add_perturbed_time_series
 
@@ -20,11 +21,26 @@ def current_time_str():
 
 def get_default_config():
     return {"lr" : 0.001,
-            "batchsize" : 16}
+            "batchsize" : 16,
+            "decay" : 0,
+            "config_step" : False,
+            "repeat_config" : False,
+            "augment" : False,
+            "alpha" : 0}
+
+def random_boolean():
+    return np.random.binomial(1, 0.5) == 1
 
 def get_random_config():
     return {"lr" : np.power(10.0, np.random.uniform(-6, -1)),
-            "batchsize" : int(np.random.uniform(0, 125))}
+            "batchsize" : int(np.random.uniform(1, 125)),
+            "decay" : np.power(10.0, np.random.uniform(-8, -1)),
+            "config_step" : random_boolean(),
+            "repeat_config" : random_boolean(),
+            "augment" : random_boolean(),
+            "add_perturbed" : int(np.random.uniform(0, 1000)),
+            "add_nontraining" : int(np.random.uniform(0, 100)),
+            "alpha" : np.power(10.0, np.random.uniform(-8, -1))}
 
 def task3(config,
           randomize_length,
@@ -34,8 +50,8 @@ def task3(config,
     n_steps_test = n_steps
     
     use_configs = True
-    config_step = True
-    repeat_config = False
+    config_step = config["config_step"]
+    repeat_config = config["repeat_config"]
     scale_configs = True
     
     validation_split = 0.3
@@ -43,14 +59,32 @@ def task3(config,
     
     lr = config["lr"]
     batchsize = config["batchsize"]
-    decay = 0
+    decay = config["decay"]
     
-    regularize = False
-    alpha = 1E-4
+    regularize = True
+    alpha = config["alpha"]
     
     remove_nonlearning = False
-    add_perturbed = 0
-    add_nontraining = 0
+    
+    augment = config["augment"]
+    add_perturbed = 0 if not augment else config["add_perturbed"]
+    add_nontraining = 0 if not augment else config["add_nontraining"]
+    
+    # title of current run
+    run_name = current_time_str()
+    if not randomize_length:
+        run_name += "_%is" % n_steps
+    else:
+        run_name += "_rnd"
+    run_name += "_lr%f" % lr
+    run_name += "_bs%i" % batchsize
+    run_name += "_dc%f" % decay
+    run_name += "_a%f" % alpha
+    run_name += "_cstp" if config_step else ""
+    run_name += "_rptcnfg" if repeat_config else ""
+    if augment:
+        run_name += "_augm_%i_%i" % (add_perturbed, add_nontraining)
+    print(run_name)
     
     # functions
     def plot_predicted_curves(model, X_test, test_indices, filename = None):
@@ -91,11 +125,7 @@ def task3(config,
         return loss(np.array(final_y), final_y_hat)
     
     # file name for plots
-    tmp_file_name = "tmp/model%s" % current_time_str()
-    if not randomize_length:
-        tmp_file_name += "_%is" % n_steps
-    else:
-        tmp_file_name += "_rnd"
+    tmp_file_name = "tmp/model_%s" % run_name
     
     if config_step:
         n_steps_train = n_steps
@@ -190,10 +220,8 @@ def task3(config,
         #                   alpha = alpha, batchsize = None)
         
         best_valid_e40 = {}
-        best_valid_e40[5] = float("inf")
-        best_valid_e40[10] = float("inf")
-        best_valid_e40[20] = float("inf")
-        best_valid_e40[30] = float("inf")
+        for k in [5, 10, 20, 30]:
+            best_valid_e40[k] = float("inf")
         best_mean_valid_e40 = float("inf")
         best_valid_e40_epoch = -1
         
@@ -218,13 +246,16 @@ def task3(config,
                 y_hat = model.predict(x)
                 model.train_on_batch(x, y)
                 training_losses.append(loss(y, y_hat))
-            print("training loss =   %f" % np.mean(training_losses))
+            training_loss = np.mean(training_losses)
+            print("training loss =   %f" % training_loss)
+            #tensorboard_log_value(run_name, "losses_f%i/training" % fold, epoch, training_loss)
             
             # validation
             if (epoch + 1) % 1 == 0:
                 y_hat = model.predict(X_valid[:, :n_steps_valid, :])[:, :, 0]
-                validation_loss = loss(Y_valid, y_hat)
-                print("validation loss = %f" % np.mean(validation_loss))
+                validation_loss = np.mean(loss(Y_valid, y_hat))
+                print("validation loss = %f" % validation_loss)
+                #tensorboard_log_value(run_name, "losses_f%i/validation" % fold, epoch, validation_loss)
             
             if (epoch + 1) % evaluate_each == 0:
                 print(lr, decay, batchsize)
@@ -243,6 +274,16 @@ def task3(config,
                 print("validation MSE[:30]@40 = %f" % valid_e40_30)
                 
                 mean_valid_e40 = np.mean([valid_e40_5, valid_e40_10, valid_e40_20, valid_e40_30])
+                
+                prefix = "losses_f%i/" % fold
+                tensorboard_log_values(run_name, epoch, {prefix + "training" : training_loss,
+                                                         prefix + "validation" : validation_loss,
+                                                         prefix + "validation_E40_5" : valid_e40_5,
+                                                         prefix + "validation_E40_10" : valid_e40_10,
+                                                         prefix + "validation_E40_20" : valid_e40_20,
+                                                         prefix + "validation_E40_30" : valid_e40_30,
+                                                         prefix + "validation_E40_mean" : mean_valid_e40})
+                
                 if mean_valid_e40 < best_mean_valid_e40:
                     print("* new best model *")
                     
