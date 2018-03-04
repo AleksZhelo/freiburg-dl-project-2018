@@ -94,6 +94,8 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
         if normalize:
             train_configs, mean, std = normalized(train_configs)
             test_configs, _, _ = normalized(test_configs, mean, std)
+            if early_stopping:
+                valid_configs, _, _ = normalized(valid_configs, mean, std)
 
         total_epochs = 0
         curr_steps = 0
@@ -240,7 +242,7 @@ if __name__ == '__main__':
     with tf.Session() as session:
         params = {
             'learning_rate': 0.001,
-            'reg_weight': 0.001,
+            'reg_weight': 0.05,
             'batch_size': batch_size,
             'exponential_decay': False,
             'decay_rate': 0.1,
