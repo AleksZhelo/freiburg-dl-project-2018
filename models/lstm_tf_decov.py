@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 from util.decorators import define_scope
 from util.loader import load_data_as_numpy
@@ -68,11 +69,21 @@ class LSTM_TF_DeCov(object):
 
     @define_scope
     def loss(self):
-        out_reshaped = tf.reshape(self.lstm_outputs, [self.batch_size, -1])
-        mean_activation = tf.reduce_mean(out_reshaped, axis=0)
-        v = out_reshaped - mean_activation
-        cov = tf.matmul(tf.transpose(v), v)
-        regularization_penalty = 0.5 * (tf.reduce_sum(tf.square(cov)) - tf.reduce_sum(tf.square(tf.diag_part(cov))))
+        out_reshaped = tf.transpose(self.lstm_outputs, [1, 0, 2])
+        initializer = np.zeros((64, 64), dtype=np.float32)
+        covariances = \
+            tf.scan(
+                lambda _, x: tf.matmul(
+                    tf.transpose(x - tf.reduce_mean(x, axis=0)),
+                    x - tf.reduce_mean(x, axis=0)
+                ),
+                out_reshaped, initializer, infer_shape=False
+            )
+        initializer = np.array(0.0, dtype=np.float32)
+        decov_losses = \
+            tf.scan(lambda _, x: 0.5 * (tf.reduce_sum(tf.square(x)) - tf.reduce_sum(tf.square(tf.diag_part(x)))),
+                    covariances, initializer)
+        regularization_penalty = tf.reduce_sum(decov_losses)
 
         if self.reg_weight > 0:
             return tf.losses.mean_squared_error(self.target, self.prediction) + self.reg_weight * regularization_penalty
@@ -98,8 +109,6 @@ class LSTM_TF_DeCov(object):
 
 
 if __name__ == '__main__':
-    import numpy as np
-
     batch_size = 12
     n_input = 5
 

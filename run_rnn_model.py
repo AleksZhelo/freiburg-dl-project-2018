@@ -235,14 +235,14 @@ if __name__ == '__main__':
     eval_every = 1
     normalize = True
     early_stopping = True
-    patience = 150
+    patience = 250
 
     model = LSTM_TF_DeCov
 
     with tf.Session() as session:
         params = {
             'learning_rate': 0.001,
-            'reg_weight': 0.05,
+            'reg_weight': 0.01,
             'batch_size': batch_size,
             'exponential_decay': False,
             'decay_rate': 0.1,
