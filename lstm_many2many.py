@@ -10,7 +10,7 @@ import matplotlib.pyplot as  plt
 
 from util.loader import load_data
 from util.time_series_data import get_time_series, reshape_X, reshape_y
-from models.lstm import lstm, small_lstm
+from models.lstm import lstm
 from util.common import loss
 from util.tensorboard import tensorboard_log_values
 from preprocessing.standard_scaler import StandardScaler
@@ -20,32 +20,35 @@ def current_time_str():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def get_default_config():
-    return {"lr" : 0.001,
-            "batchsize" : 16,
-            "decay" : 0,
-            "config_step" : False,
+    return {"lr" : 0.01,
+            "batchsize" : 1,
+            "lr_decay" : False,
+            "config_step" : True,
             "repeat_config" : False,
             "augment" : False,
-            "alpha" : 0}
+            "weight_decay" : False}
 
-def random_boolean():
-    return np.random.binomial(1, 0.5) == 1
+def random_boolean(p=0.5):
+    return np.random.binomial(1, p) == 1
 
 def get_random_config():
-    return {"lr" : np.power(10.0, np.random.uniform(-6, -1)),
-            "batchsize" : int(np.random.uniform(1, 125)),
+    return {"lr" : np.power(10.0, np.random.uniform(-4, -2)),
+            "batchsize" : int(np.power(2.0, np.random.uniform(0, 6))),
+            "lr_decay" : random_boolean(),
             "decay" : np.power(10.0, np.random.uniform(-8, -1)),
             "config_step" : random_boolean(),
             "repeat_config" : random_boolean(),
             "augment" : random_boolean(),
-            "add_perturbed" : int(np.random.uniform(0, 1000)),
-            "add_nontraining" : int(np.random.uniform(0, 100)),
-            "alpha" : np.power(10.0, np.random.uniform(-8, -1))}
+            "add_perturbed" : int(np.power(10.0, np.random.uniform(0, 3))),
+            "add_nontraining" : int(np.power(10.0, np.random.uniform(0, 2))),
+            "weight_decay" : random_boolean(),
+            "alpha" : np.power(10.0, np.random.uniform(-8, -2))}
 
 def task3(config,
           randomize_length,
           n_steps,
-          epochs):
+          epochs,
+          log_dir="logs"):
     n_steps_valid = n_steps
     n_steps_test = n_steps
     
@@ -59,10 +62,12 @@ def task3(config,
     
     lr = config["lr"]
     batchsize = config["batchsize"]
-    decay = config["decay"]
     
-    regularize = True
-    alpha = config["alpha"]
+    lr_decay = config["lr_decay"]
+    decay = 0 if not lr_decay else config["decay"]
+    
+    regularize = config["weight_decay"]
+    alpha = 0 if not regularize else config["alpha"]
     
     remove_nonlearning = False
     
@@ -78,8 +83,10 @@ def task3(config,
         run_name += "_rnd"
     run_name += "_lr%f" % lr
     run_name += "_bs%i" % batchsize
-    run_name += "_dc%f" % decay
-    run_name += "_a%f" % alpha
+    if lr_decay:
+        run_name += "_dc%f" % decay
+    if regularize:
+        run_name += "_a%f" % alpha
     run_name += "_cstp" if config_step else ""
     run_name += "_rptcnfg" if repeat_config else ""
     if augment:
@@ -216,8 +223,6 @@ def task3(config,
         
         model = lstm(d, lr, decay = decay, many2many = True, regularize = regularize,
                      alpha = alpha, batchsize = None)
-        #model = small_lstm(d, lr, decay = decay, many2many = True, regularize = regularize,
-        #                   alpha = alpha, batchsize = None)
         
         best_valid_e40 = {}
         for k in [5, 10, 20, 30]:
@@ -248,14 +253,12 @@ def task3(config,
                 training_losses.append(loss(y, y_hat))
             training_loss = np.mean(training_losses)
             print("training loss =   %f" % training_loss)
-            #tensorboard_log_value(run_name, "losses_f%i/training" % fold, epoch, training_loss)
             
             # validation
             if (epoch + 1) % 1 == 0:
                 y_hat = model.predict(X_valid[:, :n_steps_valid, :])[:, :, 0]
                 validation_loss = np.mean(loss(Y_valid, y_hat))
                 print("validation loss = %f" % validation_loss)
-                #tensorboard_log_value(run_name, "losses_f%i/validation" % fold, epoch, validation_loss)
             
             if (epoch + 1) % evaluate_each == 0:
                 print(lr, decay, batchsize)
@@ -276,7 +279,7 @@ def task3(config,
                 mean_valid_e40 = np.mean([valid_e40_5, valid_e40_10, valid_e40_20, valid_e40_30])
                 
                 prefix = "losses_f%i/" % fold
-                tensorboard_log_values(run_name, epoch, {prefix + "training" : training_loss,
+                tensorboard_log_values(log_dir, run_name, epoch, {prefix + "training" : training_loss,
                                                          prefix + "validation" : validation_loss,
                                                          prefix + "validation_E40_5" : valid_e40_5,
                                                          prefix + "validation_E40_10" : valid_e40_10,
@@ -309,8 +312,10 @@ def task3(config,
         test_e40[20] = evaluate_step40_loss(best_model, X_test, test_indices, 20)
         test_e40[30] = evaluate_step40_loss(best_model, X_test, test_indices, 30)
         fold_test_errors.append(test_e40)
-        filename = tmp_file_name + "_f%i_best.png" % fold
-        print(filename)
+        print(test_e40)
+        
+        #filename = tmp_file_name + "_f%i_best.png" % fold
+        #print(filename)
         #plot_predicted_curves(best_model, X_test, test_indices, filename = filename)
     
     means_e40 = {}
@@ -326,16 +331,72 @@ def task3(config,
 if __name__ == "__main__":
     randomize_length = True
     n_steps = 20
-    epochs = 200
-    logfile = "logs/random_search_%s_%ie_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
-                                                   epochs,
-                                                   current_time_str())
-    for i in range(100):
-        config = get_random_config()
-        results = task3(config, randomize_length, n_steps, epochs)
-        with open(logfile, "a") as f:
+    experiment = "successive_halving"  # choose from {"default", "random_search", "successive_halving"}
+    tensorboard_log_dir = "logs/successive_halving_rnd_01"
+    
+    ###############
+    ### DEFAULT ###
+    ###############
+    if experiment == "default":
+        epochs = 1000
+        logfile = "logs/default_%s_%ie_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
+                                                       epochs,
+                                                       current_time_str())
+        config = get_default_config()
+        results = task3(config, randomize_length, n_steps, epochs, log_dir=tensorboard_log_dir)
+        with open(logfile, "w") as f:
             f.write(str(config) + "\n")
             f.write(str(results) + "\n")
             f.write(str(np.mean([results[s] for s in results])) + "\n")
-            f.write("\n")
-            f.write(current_time_str() + "\n")
+    
+    #####################
+    ### RANDOM SEARCH ###
+    #####################
+    elif experiment == "random_search":
+        n_configs = 100
+        epochs = 200
+        logfile = "logs/random_search_%s_%ie_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
+                                                       epochs,
+                                                       current_time_str())
+        for i in range(n_configs):
+            config = get_random_config()
+            results = task3(config, randomize_length, n_steps, epochs, log_dir=tensorboard_log_dir)
+            with open(logfile, "a") as f:
+                f.write(str(config) + "\n")
+                f.write(str(results) + "\n")
+                f.write(str(np.mean([results[s] for s in results])) + "\n")
+                f.write("\n")
+                f.write(current_time_str() + "\n")
+    
+    ##########################
+    ### SUCCESSIVE HALVING ###
+    ##########################
+    elif experiment == "successive_halving":
+        n_configs = 256
+        epochs = 10
+        iterations = 8
+    
+        logfile = "logs/successive_halving_%s_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
+                                                       current_time_str())
+        
+        configs = [get_random_config() for i in range(n_configs)]
+        for i in range(iterations):
+            with open(logfile, "a") as f:
+                f.write("\n### ITERATION %i ###\n\n" % i)
+                f.write("%i epochs\n\n" % epochs)
+            
+            config_results = []
+            for config in configs:
+                results = task3(config, randomize_length, n_steps, epochs, log_dir=tensorboard_log_dir)
+                mean_result = np.mean([results[s] for s in results])
+                config_results.append(mean_result)
+                with open(logfile, "a") as f:
+                    f.write(str(config) + "\n")
+                    f.write(str(results) + "\n")
+                    f.write(str(mean_result) + "\n")
+                    f.write("\n")
+                    f.write(current_time_str() + "\n")
+            
+            n_configs = n_configs // 2
+            configs = [pair[1] for pair in sorted(zip(config_results, configs))[:n_configs]]
+            epochs = epochs * 2
