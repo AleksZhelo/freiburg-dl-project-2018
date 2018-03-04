@@ -15,6 +15,9 @@ def run_model(session, configs, learning_curves, log_dir,
         batch_size = params['batch_size']
         params = dict(params)
         del params['batch_size']
+    # TODO: this is wrong the whole time
+    # needs to be train_configs.shape[0]
+    # will not change not to break repeatability of optimization results
     num_train_samples = configs.shape[0]
     epoch_steps = num_train_samples / batch_size
 
