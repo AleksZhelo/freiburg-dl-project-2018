@@ -1,4 +1,5 @@
 import datetime
+import multiprocessing as mp
 
 import numpy as np
 from sklearn.model_selection import KFold
@@ -358,9 +359,11 @@ if __name__ == "__main__":
         logfile = "logs/random_search_%s_%ie_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
                                                        epochs,
                                                        current_time_str())
+        pool = mp.Pool()
         for i in range(n_configs):
             config = get_random_config()
-            results = task3(config, randomize_length, n_steps, epochs, log_dir=tensorboard_log_dir)
+            results = pool.apply(task3,
+                                 args=(config, randomize_length, n_steps, epochs, tensorboard_log_dir))
             with open(logfile, "a") as f:
                 f.write(str(config) + "\n")
                 f.write(str(results) + "\n")
@@ -373,12 +376,13 @@ if __name__ == "__main__":
     ##########################
     elif experiment == "successive_halving":
         n_configs = 256
-        epochs = 10
+        epochs = 1
         iterations = 8
     
         logfile = "logs/successive_halving_%s_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
                                                        current_time_str())
         
+        pool = mp.Pool()
         configs = [get_random_config() for i in range(n_configs)]
         for i in range(iterations):
             with open(logfile, "a") as f:
@@ -387,7 +391,8 @@ if __name__ == "__main__":
             
             config_results = []
             for config in configs:
-                results = task3(config, randomize_length, n_steps, epochs, log_dir=tensorboard_log_dir)
+                results = pool.apply(task3,
+                                     args=(config, randomize_length, n_steps, epochs, tensorboard_log_dir))
                 mean_result = np.mean([results[s] for s in results])
                 config_results.append(mean_result)
                 with open(logfile, "a") as f:
