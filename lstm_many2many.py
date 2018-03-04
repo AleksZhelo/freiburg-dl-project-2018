@@ -1,21 +1,6 @@
-import datetime
-import multiprocessing as mp
-
 import numpy as np
-from sklearn.model_selection import KFold
-from keras.models import clone_model
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as  plt
-
-from util.loader import load_data
-from util.time_series_data import get_time_series, reshape_X, reshape_y
-from models.lstm import lstm
-from util.common import loss
-from util.tensorboard import tensorboard_log_values
-from preprocessing.standard_scaler import StandardScaler
-from preprocessing.augmentation import add_nontraining_time_series, add_perturbed_time_series
+import datetime
+from multiprocessing import Process, Manager
 
 def current_time_str():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -45,11 +30,27 @@ def get_random_config():
             "weight_decay" : random_boolean(),
             "alpha" : np.power(10.0, np.random.uniform(-8, -2))}
 
-def task3(config,
+def task3(return_dict,
+          config,
           randomize_length,
           n_steps,
           epochs,
           log_dir="logs"):
+    from sklearn.model_selection import KFold
+    from keras.models import clone_model
+    
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as  plt
+    
+    from util.loader import load_data
+    from util.time_series_data import get_time_series, reshape_X, reshape_y
+    from models.lstm import lstm
+    from util.common import loss
+    from util.tensorboard import tensorboard_log_values
+    from preprocessing.standard_scaler import StandardScaler
+    from preprocessing.augmentation import add_nontraining_time_series, add_perturbed_time_series
+
     n_steps_valid = n_steps
     n_steps_test = n_steps
     
@@ -327,13 +328,13 @@ def task3(config,
         mean_e40 = np.mean(e40_folds)
         print("mean = %f" % mean_e40)
         means_e40[steps] = mean_e40
-    return means_e40
+    return_dict["results"] = means_e40
 
 if __name__ == "__main__":
     randomize_length = True
     n_steps = 20
     experiment = "successive_halving"  # choose from {"default", "random_search", "successive_halving"}
-    tensorboard_log_dir = "logs/successive_halving_rnd_01"
+    tensorboard_log_dir = "logs/successive_halving_rnd_02"
     
     ###############
     ### DEFAULT ###
@@ -359,11 +360,15 @@ if __name__ == "__main__":
         logfile = "logs/random_search_%s_%ie_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
                                                        epochs,
                                                        current_time_str())
-        pool = mp.Pool()
+        manager = Manager()
         for i in range(n_configs):
             config = get_random_config()
-            results = pool.apply(task3,
-                                 args=(config, randomize_length, n_steps, epochs, tensorboard_log_dir))
+            return_dict = manager.dict()
+            p = Process(target=task3,
+                        args=(return_dict, config, randomize_length, n_steps, epochs, tensorboard_log_dir))
+            p.start()
+            p.join()
+            results = return_dict["results"]
             with open(logfile, "a") as f:
                 f.write(str(config) + "\n")
                 f.write(str(results) + "\n")
@@ -375,14 +380,15 @@ if __name__ == "__main__":
     ### SUCCESSIVE HALVING ###
     ##########################
     elif experiment == "successive_halving":
-        n_configs = 256
-        epochs = 1
-        iterations = 8
+        n_configs = 64
+        epochs = 10
+        iterations = 6
     
         logfile = "logs/successive_halving_%s_%s.log" % ("rnd" if randomize_length else (str(n_steps) + "s"),
                                                        current_time_str())
         
-        pool = mp.Pool()
+        manager = Manager()
+        
         configs = [get_random_config() for i in range(n_configs)]
         for i in range(iterations):
             with open(logfile, "a") as f:
@@ -391,8 +397,12 @@ if __name__ == "__main__":
             
             config_results = []
             for config in configs:
-                results = pool.apply(task3,
-                                     args=(config, randomize_length, n_steps, epochs, tensorboard_log_dir))
+                return_dict = manager.dict()
+                p = Process(target=task3,
+                            args=(return_dict, config, randomize_length, n_steps, epochs, tensorboard_log_dir))
+                p.start()
+                p.join()
+                results = return_dict["results"]
                 mean_result = np.mean([results[s] for s in results])
                 config_results.append(mean_result)
                 with open(logfile, "a") as f:
