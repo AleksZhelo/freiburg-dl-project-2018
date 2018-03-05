@@ -21,6 +21,11 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
                   tf_seed=1123, numpy_seed=1123, verbose=True):
     tf.set_random_seed(tf_seed)
 
+    if n_test is None:
+        n_test = [5, 10, 20, 30]
+    elif not isinstance(n_test, list):
+        n_test = [n_test]
+
     input_tensor = tf.placeholder(tf.float32, [None, None, 6])
     target = tf.placeholder(tf.float32, [None, None, 1])
     c1 = tf.placeholder(tf.float32, [None, 64])
@@ -45,13 +50,13 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
             session.graph
         )
 
-    x = np.zeros((batch_size, n_input, 6), dtype=np.float32)
-    y = np.zeros((batch_size, n_input, 1), dtype=np.float32)
+    x = np.zeros((batch_size, n_input if n_input is not None else 20, 6), dtype=np.float32)
+    y = np.zeros((batch_size, n_input if n_input is not None else 20, 1), dtype=np.float32)
 
     k_fold = KFold(n_splits=3, shuffle=True, random_state=1)
     saver = tf.train.Saver()
-    performances_valid = -np.ones(3)
-    performances_test = np.zeros(3)
+    performances_valid = -np.ones((3, 4))
+    performances_test = np.zeros((3, 4))
 
     current_fold = 0
     rs_ = np.random.RandomState(numpy_seed)
@@ -102,10 +107,14 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
         while total_epochs < train_epochs:
             loss_data = np.zeros(epoch_steps)
             for step_ in range(epoch_steps):
-                x, y = fill_lstm_batch(x, y, n_input, train_configs, train_curves, rs_)
+                x, y = fill_lstm_batch(x, y, n_input if n_input is not None else 20,
+                                       train_configs, train_curves, rs_)
+                n_input_step = n_input if n_input is not None else rs_.randint(5, 21)
                 loss, _, _, state = session.run(
                     [rnn.loss, rnn.optimize, update_ops, rnn.lstm_final_state],
-                    {rnn.input_tensor: x, rnn.target: y, phase: 1,
+                    {rnn.input_tensor: x[:, :n_input_step, :],
+                     rnn.target: y[:, :n_input_step, :],
+                     phase: 1,
                      c1: np.zeros((batch_size, 64), dtype=np.float32),
                      h1: np.zeros((batch_size, 64), dtype=np.float32),
                      c2: np.zeros((batch_size, 64), dtype=np.float32),
@@ -117,17 +126,13 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
             total_epochs += 1
 
             if total_epochs % eval_every == 0:
-                pred_full = predict_curve(initial_state, n_test, 40,
-                                          phase, rnn, session,
-                                          test_configs, test_curves)
-                error_last_pred = pred_full[:, -1].reshape(-1)
-                test_mse = mse(error_last_pred, test_curves[:, -1])
-                if early_stopping:
-                    pred_full_valid = predict_curve(initial_state, n_test, 40,
+                test_mse = loss_for_several_n_input(initial_state, n_test, 40,
                                                     phase, rnn, session,
-                                                    valid_configs, valid_curves)
-                    error_last_pred_valid = pred_full_valid[:, -1].reshape(-1)
-                    valid_mse = mse(error_last_pred_valid, valid_curves[:, -1])
+                                                    test_configs, test_curves).mean()
+                if early_stopping:
+                    valid_mse = loss_for_several_n_input(initial_state, n_test, 40,
+                                                         phase, rnn, session,
+                                                         valid_configs, valid_curves).mean()
                     print('Epoch {0} test loss: {1:.5f}, valid loss: {3:.5f} train_loss: {2:.5f}'.format(
                         total_epochs,
                         test_mse,
@@ -173,19 +178,21 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
                                                           phase: 0})
                     train_summary_writer.add_summary(sm, total_epochs)
 
-        pred_full = predict_curve(initial_state, n_test, 40,
-                                  phase, rnn, session,
-                                  test_configs, test_curves)
-        performances_test[current_fold] = mse(pred_full[:, -1].reshape(-1), test_curves[:, -1])
+        performances_test[current_fold, :] \
+            = loss_for_several_n_input(initial_state, [5, 10, 20, 30], 40,
+                                       phase, rnn, session,
+                                       test_configs, test_curves)
         if early_stopping:
-            performances_valid[current_fold] = best_valid
-        # print(session.run(mlp.prediction, {mlp.input_tensor: test_configs}) - test_curves[:, -1].reshape(-1, 1))
+            performances_valid[current_fold, :] = \
+                loss_for_several_n_input(initial_state, [5, 10, 20, 30], 40,
+                                         phase, rnn, session,
+                                         valid_configs, valid_curves)
         current_fold += 1
     if verbose:
         if early_stopping:
-            print('mean cross-validation valid loss: {0}'.format(performances_valid.mean()))
-        print('mean cross-validation test loss: {0}, params: {1}'.format(performances_test.mean(), params))
-    return performances_test.mean(), performances_valid.mean()
+            print('mean cross-validation valid loss: {0}'.format(performances_valid.mean(axis=0)))
+        print('mean cross-validation test loss: {0}, params: {1}'.format(performances_test.mean(axis=0), params))
+    return performances_test.mean(axis=0), performances_valid.mean(axis=0)
 
 
 def predict_curve(initial_state, n_input, n_output, phase, rnn, session, configs, curves):
@@ -220,6 +227,16 @@ def predict_curve(initial_state, n_input, n_output, phase, rnn, session, configs
     return pred_full
 
 
+def loss_for_several_n_input(initial_state, n_input, n_output,
+                             phase, rnn, session, configs, curves):
+    res = np.zeros(len(n_input))
+    for l, in_length in enumerate(n_input):
+        pred_full = predict_curve(initial_state, in_length, n_output,
+                                  phase, rnn, session, configs, curves)
+        res[l] = mse(pred_full[:, -1].reshape(-1), curves[:, -1])
+    return res
+
+
 if __name__ == '__main__':
     log_dir = os.path.join(os.path.dirname(__file__), 'logs')
     ensure_dir(log_dir)
@@ -231,6 +248,8 @@ if __name__ == '__main__':
     configs, learning_curves = load_data_as_numpy()
 
     batch_size = 32
+    n_input_train = None  # if None - randomized between 5 and 20
+    n_input_test = None  # 30  # if None - average of results for [5, 10, 20, 30] is used
     train_epochs = 1500
     eval_every = 1
     normalize = True
@@ -249,12 +268,10 @@ if __name__ == '__main__':
             'decay_steps': 200 * 176 / batch_size  # hacky
         }
         training_start = date2str(datetime.now())
-        # TODO: evaluate MSE@40[:5], MSE@40[:10], MSE@40[:20], MSE@40[:30]
-        # TODO: and use their mean for best_valid
-        # TODO: also simply report and save
         perf_test, perf_valid = \
             run_rnn_model(session, configs, learning_curves, None, save_dir,
-                          model, 20, 30, normalize, train_epochs, batch_size, eval_every, params,
+                          model, n_input_train, n_input_test, normalize,
+                          train_epochs, batch_size, eval_every, params,
                           early_stopping=early_stopping, patience=patience,
                           tf_seed=1123, numpy_seed=1123, verbose=True)
 
@@ -262,12 +279,15 @@ if __name__ == '__main__':
             f.write('{0}, started {1}, finished {2}\n'.format(
                 model.__name__, training_start, date2str(datetime.now())
             ))
-            f.write('cv_loss_test: {0:.6f}, cv_loss_valid: {1:.6f}\n'.format(
-                perf_test, perf_valid,
+            f.write('cv_loss_valid: {0}\ncv_loss_test: {1}\n'.format(
+                np.array2string(perf_valid, precision=6, floatmode='maxprec_equal'),
+                np.array2string(perf_test, precision=6, floatmode='maxprec_equal')
             ))
             f.write('training params: {0} \nmodel params: {1}\n'.format(
                 dict(
                     batch_size=batch_size,
+                    n_input_train=n_input_train,
+                    n_input_test=n_input_test,
                     train_epochs=train_epochs,
                     eval_every=eval_every,
                     normalize=normalize,
