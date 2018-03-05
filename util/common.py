@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 
 
 def ensure_dir(directory):
@@ -57,3 +58,20 @@ def loss(y_hat, y):
     y : true values
     """
     return np.mean(np.power(y_hat - y, 2))
+
+
+def print_pd_frame_from_multi_input_performances(performances, estimators):
+    data = {
+        '5 points': np.mean(performances, axis=1)[:, 0],
+        '10 points': np.mean(performances, axis=1)[:, 1],
+        '20 points': np.mean(performances, axis=1)[:, 2],
+        '30 points': np.mean(performances, axis=1)[:, 3]
+    }
+    frame = pd.DataFrame(data, index=estimators)
+    pd.set_option('display.height', 1000)
+    pd.set_option('display.max_rows', 500)
+    pd.set_option('display.max_columns', 500)
+    pd.set_option('display.width', 1000)
+    pd.set_option('display.max_colwidth', 1000)
+    frame = frame[sorted(frame.columns.tolist(), key=lambda x: int(x.split(' ')[0]))]
+    print(frame)
