@@ -12,12 +12,12 @@ from sklearn import linear_model
 
 from sklearn.model_selection import KFold
 
-from util.common import loss
+from util.common import loss, print_pd_frame_from_multi_input_performances
 from util.loader import load_data_as_numpy
 from sklearn.preprocessing import StandardScaler
 
 normalize = True
-use_config = True
+use_config = False
 configs, learning_curves = load_data_as_numpy()
 
 estimators = [
@@ -33,8 +33,10 @@ estimators = [
 
 k_fold = KFold(n_splits=3, shuffle=True, random_state=1)
 
+performances = np.zeros((len(estimators), 3, 4))
+
 for m_idx, model_desc in enumerate(estimators):
-    performances = np.zeros((3, 4))
+
     current_fold = 0
 
     print(model_desc)
@@ -71,8 +73,10 @@ for m_idx, model_desc in enumerate(estimators):
 
             pred_y = clf.predict(test_x)
             fold_loss = loss(pred_y, test_curves[:, -1])
-            performances[current_fold, k] = fold_loss
-        print('fold {0} loss: {1:}'.format(current_fold, np.round(performances[current_fold], 6)))
+            performances[m_idx, current_fold, k] = fold_loss
+        print('fold {0} loss: {1:}'.format(current_fold, np.round(performances[m_idx, current_fold], 6)))
         current_fold += 1
 
-    print('mean CV performance: {0} \n'.format(np.round(performances.mean(axis=0), 6)))
+    print('mean CV performance: {0} \n'.format(np.round(performances[m_idx].mean(axis=0), 6)))
+
+print_pd_frame_from_multi_input_performances(performances, estimators)

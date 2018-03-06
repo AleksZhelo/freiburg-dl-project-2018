@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 # noinspection PyUnresolvedReferences
@@ -13,7 +14,7 @@ from sklearn import linear_model
 
 from sklearn.model_selection import KFold
 
-from util.common import loss
+from util.common import loss, print_pd_frame_from_multi_input_performances
 from util.loader import load_data_as_numpy
 from sklearn.preprocessing import StandardScaler
 
@@ -47,14 +48,15 @@ estimators = [
     'linear_model.LinearRegression()',
     'linear_model.Ridge(alpha=0.1)',
     'RandomForestRegressor(n_estimators=30)',
-    'SVR(C=2.0, kernel=\'linear\', epsilon=0.005)',
+    # 'SVR(C=2.0, kernel=\'linear\', epsilon=0.005)',
     'BaggingRegressor()'
 ]
 
 k_fold = KFold(n_splits=3, shuffle=True, random_state=1)
 
+performances = np.zeros((len(estimators), 3, 4))
+
 for m_idx, model_desc in enumerate(estimators):
-    performances = np.zeros((3, 4))
     current_fold = 0
 
     print(model_desc)
@@ -82,18 +84,19 @@ for m_idx, model_desc in enumerate(estimators):
         clf = eval(model_desc)
         clf.fit(train_x, train_y)
 
-        # for k, input_points in enumerate([4, 9, 19, 29]):
         for k, input_points in enumerate([5, 10, 20, 30]):
             pred_curves = np.array(
                 [predict_curve(clf, test_configs[t], test_curves[t, :input_points], test_curves.shape[1])
                  for t in range(test_configs.shape[0])]
             )
             fold_loss = loss(pred_curves[:, -1], test_curves[:, -1])
-            performances[current_fold, k] = fold_loss
-        print('fold {0} loss: {1}'.format(current_fold, performances[current_fold]))
+            performances[m_idx, current_fold, k] = fold_loss
+        print('fold {0} loss: {1}'.format(current_fold, performances[m_idx, current_fold]))
         current_fold += 1
 
-    print('mean CV performance: {0} \n'.format(performances.mean(axis=0)))
+    print('mean CV performance: {0} \n'.format(performances[m_idx].mean(axis=0)))
+
+print_pd_frame_from_multi_input_performances(performances, estimators)
 
 # steps = test_curves.shape[1]
 # fig = plt.figure(figsize=(10, 10))

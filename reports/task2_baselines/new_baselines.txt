@@ -1,0 +1,7 @@
+                                         no prep      prep
+GradientBoostingRegressor()             0.011544  0.011542
+linear_model.LinearRegression()         0.033657  0.033657
+linear_model.Ridge(alpha=10)            0.033636  0.033618
+RandomForestRegressor(n_estimators=30)  0.012072  0.011820
+SVR(kernel='linear')                    0.035326  0.035445
+BaggingRegressor()                      0.011350  0.011413
