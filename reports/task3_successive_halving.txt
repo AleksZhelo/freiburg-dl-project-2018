@@ -1,0 +1,22 @@
+approach           | trained |        prediction using true steps
+                   | on      |        5 |       10 |       20 |       30
+------------------------------------------------------------------------
+successive halving |       5 | 0.009069 | 0.007672 | 0.007809 | 0.006452
+successive halving |      10 | 0.004855 | 0.003278 | 0.002413 | 0.001553
+successive halving |      20 | 0.003071 | 0.001695 | 0.000649 | 0.000429
+successive halving |     rnd | 0.000849 | 0.000734 | 0.000636 | 0.000493
+random search      |     rnd | 0.001744 | 0.001129 | 0.000936 | 0.000573
+manually tuned SGD |     rnd | 0.002167 | 0.000766 | 0.000680 | 0.000481
+
+
+best config for 5 steps:
+{'lr_decay': True, 'repeat_config': False, 'weight_decay': True, 'decay': 0.003748514300897848, 'alpha': 2.759812544571463e-05, 'lr': 0.006998771494024961, 'batchsize': 7, 'add_nontraining': 17, 'augment': False, 'add_perturbed': 4, 'config_step': False}
+
+best config for 10 steps:
+{'lr': 0.0014717761300502988, 'repeat_config': False, 'weight_decay': False, 'config_step': True, 'decay': 1.5034654756905744e-08, 'lr_decay': True, 'alpha': 0.002260460148113841, 'augment': False, 'add_perturbed': 185, 'batchsize': 7, 'add_nontraining': 1}
+
+best config for 20 steps:
+{'add_perturbed': 366, 'repeat_config': False, 'lr_decay': False, 'lr': 0.0006844434294889107, 'add_nontraining': 3, 'augment': False, 'weight_decay': True, 'config_step': False, 'batchsize': 3, 'alpha': 5.410336621059775e-06, 'decay': 0.004249816100868265}
+
+best config for random steps:
+{'repeat_config': False, 'lr': 0.005319302404674179, 'weight_decay': False, 'add_nontraining': 2, 'config_step': False, 'lr_decay': False, 'alpha': 0.00047781059374312157, 'augment': False, 'batchsize': 6, 'decay': 2.7765453774573654e-07, 'add_perturbed': 5}
