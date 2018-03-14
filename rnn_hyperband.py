@@ -68,8 +68,8 @@ if __name__ == '__main__':
     train_epochs = 1500
     eval_every = 1
     normalize = True
-    early_stopping = True
     decay_lr = False
+    early_stopping = True
     patience = 250
     run_time = 1 * 3600
 
@@ -103,7 +103,22 @@ if __name__ == '__main__':
         for proc in jobs:
             proc.join()
         jobs[:] = []
+
     results_non_managed = [x for x in results]
+    results_non_managed.append(
+        dict(
+            batch_size=batch_size,
+            n_input_train=n_input_train,
+            n_input_test=n_input_test,
+            train_epochs=train_epochs,
+            eval_every=eval_every,
+            normalize=normalize,
+            decay_lr=decay_lr,
+            early_stopping=early_stopping,
+            patience=patience,
+            run_time=run_time
+        )
+    )
 
     # TODO: write after every iteration
     with open(os.path.join(res_dir, '{0}_hyperband_{1}'.format(
