@@ -4,6 +4,7 @@ import functools
 import gc
 import json
 import os
+import platform
 from datetime import datetime
 
 import multiprocessing
@@ -11,6 +12,7 @@ import numpy as np
 import tensorflow as tf
 
 from hyperband.hyperband import Hyperband
+from models.lstm_tf_decov import LSTM_TF_DeCov
 from models.lstm_tf_l2 import LSTM_TF_L2
 from run_rnn_model import run_rnn_model
 from util.common import ensure_dir, date2str
@@ -73,19 +75,22 @@ if __name__ == '__main__':
     patience = 250
     run_time = 1 * 3600
 
-    # model = LSTM_TF_DeCov
+    model = LSTM_TF_DeCov
     # model = LSTM_TF_Dropout
-    model = LSTM_TF_L2
-
+    # model = LSTM_TF_L2
 
     def worker(process_num, managed_results):
         rs = np.random.RandomState()
-        hyperband = Hyperband(gen_sample_params(model, decay_lr, rs),
-                              functools.partial(
-                                  evaluate_model,
-                                  model_desc='{0}_process{1}'.format(model.__name__, process_num)
-                              ),
-                              max_epochs=train_epochs, reduction_factor=5, min_r=5)
+        hyperband = Hyperband(
+            gen_sample_params(model, decay_lr, rs),
+            functools.partial(
+                evaluate_model,
+                model_desc='{0}_{1}_process{2}'.format(
+                    model.__name__, platform.node(), process_num
+                )
+            ),
+            max_epochs=train_epochs, reduction_factor=5, min_r=5
+        )
         managed_results.extend(hyperband.run(early_stopping=early_stopping))
 
 
