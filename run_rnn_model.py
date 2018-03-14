@@ -7,6 +7,8 @@ import tensorflow as tf
 from sklearn.model_selection import KFold
 
 from models.lstm_tf_decov import LSTM_TF_DeCov
+from models.lstm_tf_dropout import LSTM_TF_Dropout
+from models.lstm_tf_l2 import LSTM_TF_L2
 from util.common import normalized, ensure_dir, fill_pred_lstm_batch, fill_lstm_batch, date2str
 
 from util.loader import load_data_as_numpy
@@ -17,7 +19,7 @@ from util.common import loss as mse
 def run_rnn_model(session, configs, learning_curves, log_dir,
                   save_dir, model_class, n_input, n_test,
                   normalize, train_epochs, batch_size, eval_every, params,
-                  early_stopping=False, patience=50,
+                  early_stopping=False, patience=50, n_folds=3, model_desc=None,
                   tf_seed=1123, numpy_seed=1123, verbose=True):
     tf.set_random_seed(tf_seed)
 
@@ -38,11 +40,12 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
 
     rnn = model_class(input_tensor, target, initial_state, phase, **params)
 
-    model_desc = '{0}_{1}_{2}'.format(
-        model_class.__name__,
-        '_'.join(['{0}={1}'.format(a, b) for a, b in zip(params.keys(), params.values())]),
-        date2str(datetime.now())
-    )
+    if model_desc is None:
+        model_desc = '{0}_{1}_{2}'.format(
+            model_class.__name__,
+            '_'.join(['{0}={1}'.format(a, b) for a, b in zip(params.keys(), params.values())]),
+            date2str(datetime.now())
+        )
 
     if log_dir is not None:
         train_summary_writer = tf.summary.FileWriter(
@@ -53,10 +56,12 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
     x = np.zeros((batch_size, n_input if n_input is not None else 20, 6), dtype=np.float32)
     y = np.zeros((batch_size, n_input if n_input is not None else 20, 1), dtype=np.float32)
 
-    k_fold = KFold(n_splits=3, shuffle=True, random_state=1)
+    k_fold = KFold(n_splits=n_folds, shuffle=True, random_state=1)
     saver = tf.train.Saver()
-    performances_valid = -np.ones((3, 4))
-    performances_test = np.zeros((3, 4))
+    performances_valid = -np.ones((n_folds, 4))
+    performances_test = np.zeros((n_folds, 4))
+    stopped_early = np.zeros(n_folds)
+    fold_num_epochs = np.zeros(n_folds)
 
     current_fold = 0
     rs_ = np.random.RandomState(numpy_seed)
@@ -104,7 +109,7 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
 
         total_epochs = 0
         curr_steps = 0
-        while total_epochs < train_epochs:
+        while total_epochs < int(np.round(train_epochs)):
             loss_data = np.zeros(epoch_steps)
             for step_ in range(epoch_steps):
                 x, y = fill_lstm_batch(x, y, n_input if n_input is not None else 20,
@@ -126,24 +131,27 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
             total_epochs += 1
 
             if total_epochs % eval_every == 0:
-                test_mse = loss_for_several_n_input(initial_state, n_test, 40,
-                                                    phase, rnn, session,
-                                                    test_configs, test_curves).mean()
+                test_mse = -1
+                # test_mse = loss_for_several_n_input(initial_state, n_test, 40,
+                #                                     phase, rnn, session,
+                #                                     test_configs, test_curves).mean()
                 if early_stopping:
                     valid_mse = loss_for_several_n_input(initial_state, n_test, 40,
                                                          phase, rnn, session,
                                                          valid_configs, valid_curves).mean()
-                    print('Epoch {0} test loss: {1:.5f}, valid loss: {3:.5f} train_loss: {2:.5f}'.format(
-                        total_epochs,
-                        test_mse,
-                        loss_data.mean(),
-                        valid_mse)
-                    )
+                    if verbose:
+                        print('Epoch {0} test loss: {1:.5f}, valid loss: {3:.5f} train_loss: {2:.5f}'.format(
+                            total_epochs,
+                            test_mse,
+                            loss_data.mean(),
+                            valid_mse)
+                        )
                     if valid_mse < best_valid:
                         best_valid = valid_mse
                         counter = 0
                         if save_dir is not None:
-                            print('saved model')
+                            if verbose:
+                                print('saved model')
                             saver.save(session, os.path.join(
                                 save_dir,
                                 '{0}_fold_{1}.ckpt'.format(model_desc, current_fold)
@@ -151,18 +159,21 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
                     else:
                         counter += 1
                         if counter > patience:
-                            print('restored model')
+                            if verbose:
+                                print('restored model')
                             saver.restore(session, os.path.join(
                                 save_dir,
                                 '{0}_fold_{1}.ckpt'.format(model_desc, current_fold)
                             ))
+                            stopped_early[current_fold] = 1
                             break
                 else:
-                    print('Epoch {0} test loss: {1:.5f}, train_loss: {2:.5f}'.format(
-                        total_epochs,
-                        test_mse,
-                        loss_data.mean())
-                    )
+                    if verbose:
+                        print('Epoch {0} test loss: {1:.5f}, train_loss: {2:.5f}'.format(
+                            total_epochs,
+                            test_mse,
+                            loss_data.mean())
+                        )
 
             if log_dir is not None:  # TODO: broken
                 if total_epochs % eval_every == 0:
@@ -178,6 +189,8 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
                                                           phase: 0})
                     train_summary_writer.add_summary(sm, total_epochs)
 
+        fold_num_epochs[current_fold] = total_epochs
+
         performances_test[current_fold, :] \
             = loss_for_several_n_input(initial_state, [5, 10, 20, 30], 40,
                                        phase, rnn, session,
@@ -192,7 +205,8 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
         if early_stopping:
             print('mean cross-validation valid loss: {0}'.format(performances_valid.mean(axis=0)))
         print('mean cross-validation test loss: {0}, params: {1}'.format(performances_test.mean(axis=0), params))
-    return performances_test.mean(axis=0), performances_valid.mean(axis=0)
+    return performances_test.mean(axis=0), performances_valid.mean(axis=0), \
+           dict(stopped_early=np.all(stopped_early), num_epochs=fold_num_epochs)
 
 
 def predict_curve(initial_state, n_input, n_output, phase, rnn, session, configs, curves):
@@ -256,24 +270,27 @@ if __name__ == '__main__':
     early_stopping = True
     patience = 250
 
-    model = LSTM_TF_DeCov
+    # model = LSTM_TF_DeCov
+    # model = LSTM_TF_Dropout
+    model = LSTM_TF_L2
 
     with tf.Session() as session:
         params = {
             'learning_rate': 0.001,
-            'reg_weight': 0.01,
+            'reg_weight': 0.0005,
+            # 'drop_rate': 0.00,
             'batch_size': batch_size,
             'exponential_decay': False,
             'decay_rate': 0.1,
             'decay_steps': 200 * 176 / batch_size  # hacky
         }
         training_start = date2str(datetime.now())
-        perf_test, perf_valid = \
+        perf_test, perf_valid, _ = \
             run_rnn_model(session, configs, learning_curves, None, save_dir,
                           model, n_input_train, n_input_test, normalize,
                           train_epochs, batch_size, eval_every, params,
                           early_stopping=early_stopping, patience=patience,
-                          tf_seed=1123, numpy_seed=1123, verbose=True)
+                          n_folds=3, tf_seed=1123, numpy_seed=1123, verbose=False)
 
         with open(os.path.join(res_dir, 'rnn_results.txt'), 'a') as f:
             f.write('{0}, started {1}, finished {2}\n'.format(

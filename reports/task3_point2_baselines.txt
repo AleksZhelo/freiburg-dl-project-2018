@@ -25,3 +25,4 @@ linear_model.Ridge(alpha=0.1)                                         0.003566  
 RandomForestRegressor(n_estimators=30)                                0.001275   0.001047   0.000570   0.000456
 SVR(C=2.0, kernel='linear', epsilon=0.005)                            0.004549   0.002149   0.000614   0.000374
 BaggingRegressor()                                                    0.001378   0.000971   0.000593   0.000425
+LSTM_TF on 20                                                         0.004089   0.001346   0.000490   0.000276
