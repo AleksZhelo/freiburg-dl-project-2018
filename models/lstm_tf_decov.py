@@ -42,8 +42,6 @@ class LSTM_TF_DeCov(object):
             initial_state=self.lstm_initial_state, dtype=tf.float32
         )
 
-        # drop = tf.layers.dropout(self.lstm_outputs, training=self.phase, rate=0.5)
-        # self.first_dense = tf.layers.dense(inputs=drop, units=64, activation=tf.nn.relu)
         self.first_dense = tf.layers.dense(inputs=self.lstm_outputs, units=64, activation=tf.nn.relu)
         self.last_dense = tf.layers.dense(inputs=self.first_dense, units=64, activation=tf.nn.relu)
         x = tf.layers.dense(inputs=self.last_dense, units=1, activation=None)

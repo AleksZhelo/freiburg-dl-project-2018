@@ -48,9 +48,17 @@ if __name__ == '__main__':
                 data = json.load(f)
             except JSONDecodeError:
                 f.seek(0)
-                data = parse_old_format(f.readlines())
+                try:
+                    data = parse_old_format(f.readlines())
+                except IndexError or IOError:
+                    print('Failed to read file {0}'.format(file))
+                    continue
 
+        training_settings = None
         if 'hyperband' in os.path.basename(file):
+            if 'LSTM' in os.path.basename(file):
+                training_settings = data[-1]
+                data = data[:-1]
             data = [(d['loss'], d, file) for d in data] if args.summary else [(d['loss'], d) for d in data]
         else:
             data = [(d[0], d[1], file) for d in data] if args.summary else data
@@ -62,6 +70,8 @@ if __name__ == '__main__':
             data = data[np.argsort(data[:, 0])]
             print('----------{0}----------'.format(file))
             print('model evaluations: {0}'.format(data.shape[0]))
+            if training_settings is not None:
+                print('training settings: {0}'.format(training_settings))
             print(data[:10])
 
     if args.summary:
@@ -72,4 +82,3 @@ if __name__ == '__main__':
             print('file: {0}'.format(entry[2]))
             print('config: {0}'.format(entry[1]))
             print()
-

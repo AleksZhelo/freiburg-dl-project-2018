@@ -12,7 +12,10 @@ import numpy as np
 import tensorflow as tf
 
 from hyperband.hyperband import Hyperband
+from models.lstm_tf import LSTM_TF
 from models.lstm_tf_decov import LSTM_TF_DeCov
+from models.lstm_tf_dropout import LSTM_TF_Dropout
+from models.lstm_tf_l1 import LSTM_TF_L1
 from models.lstm_tf_l2 import LSTM_TF_L2
 from run_rnn_model import run_rnn_model
 from util.common import ensure_dir, date2str
@@ -75,9 +78,11 @@ if __name__ == '__main__':
     patience = 250
     run_time = 1 * 3600
 
-    model = LSTM_TF_DeCov
+    # model = LSTM_TF_DeCov
     # model = LSTM_TF_Dropout
     # model = LSTM_TF_L2
+    model = LSTM_TF_L1
+    # model = LSTM_TF
 
     def worker(process_num, managed_results):
         rs = np.random.RandomState()

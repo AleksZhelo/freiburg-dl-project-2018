@@ -60,8 +60,6 @@ class Hyperband(object):
                     for config, loss, extra in (zip(T, L, extras) if not dry_run else []):
                         results_total.append(dict(loss=loss, epochs=r_i, config=config,
                                                   extra=extra))
-                    for e in extras:
-                        print(e)
                     stopped = np.array([e['stopped_early'] for e in extras])
                     T = T[np.invert(stopped)]
                 else:
@@ -77,8 +75,7 @@ class Hyperband(object):
 
 if __name__ == "__main__":
     # hyperband = Hyperband(None, None, max_epochs=300, reduction_factor=3)
-    # hyperband = Hyperband(None, None, max_epochs=1500, reduction_factor=5, min_r=5)
-    hyperband = Hyperband(None, None, max_epochs=15, reduction_factor=5, min_r=5)
+    hyperband = Hyperband(None, None, max_epochs=1500, reduction_factor=5, min_r=5)
     hyperband.run(verbose=True, dry_run=True, early_stopping=False)
     # hyperband = Hyperband(lambda: dict(test=np.random.randint(0, 2)),
     #                       lambda x, r: (np.random.rand(1)[0],
