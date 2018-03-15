@@ -10,6 +10,7 @@ import tensorflow as tf
 
 from models.mlp_decov import MLP_DeCov
 from models.mlp_exp_decay import MLP_EXP_DECAY
+from models.mlp_exp_decay_sgd import MLP_EXP_DECAY_SGD
 from models.mlp_l1_sgd import MLP_L1_SGD
 from task2.run_model import run_model
 from util.common import ensure_dir, date2str
@@ -38,15 +39,16 @@ if __name__ == '__main__':
     configs, learning_curves = load_data_as_numpy()
 
     batch_size = 12
-    train_epochs = 100  # was 300
+    train_epochs = 300  # was 300
     patience = 40
     eval_every = 4
     normalize = True
     decay_lr = True
-    run_time = 3 * 3600
+    run_time = 4 * 3600
 
     # model = MLP_L1_SGD
-    model = MLP_EXP_DECAY
+    # model = MLP_EXP_DECAY
+    model = MLP_EXP_DECAY_SGD
     rs = np.random.RandomState()
     results = []
 
@@ -56,6 +58,6 @@ if __name__ == '__main__':
         evaluate_model_random_search()
 
     # TODO: write after every iteration
-    with open(os.path.join(res_dir, '{0}_{1}'.format(
-            model.__name__, date2str(datetime.now()))), 'w') as f:
+    with open(os.path.join(res_dir, '{0}_{1}_{2}_epochs'.format(
+            model.__name__, date2str(datetime.now()), train_epochs)), 'w') as f:
         json.dump(results, f)

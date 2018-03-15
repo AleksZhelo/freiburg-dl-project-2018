@@ -78,10 +78,10 @@ if __name__ == '__main__':
     patience = 250
     run_time = 1 * 3600
 
-    # model = LSTM_TF_DeCov
+    model = LSTM_TF_DeCov
     # model = LSTM_TF_Dropout
     # model = LSTM_TF_L2
-    model = LSTM_TF_L1
+    # model = LSTM_TF_L1
     # model = LSTM_TF
 
     def worker(process_num, managed_results):
