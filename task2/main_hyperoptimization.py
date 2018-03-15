@@ -47,8 +47,8 @@ if __name__ == '__main__':
     run_time = 4 * 3600
 
     # model = MLP_L1_SGD
-    # model = MLP_EXP_DECAY
-    model = MLP_EXP_DECAY_SGD
+    model = MLP_EXP_DECAY
+    # model = MLP_EXP_DECAY_SGD
     rs = np.random.RandomState()
     results = []
 

@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from util.decorators import define_scope
-from util.lr_decay import exponential_decay
+from util.lr_decay import exponential_decay as exp_decay
 
 
 class MLP_EXP_DECAY(object):
@@ -34,9 +34,9 @@ class MLP_EXP_DECAY(object):
     def optimize(self):
         if self.exponential_decay:
             self.global_step = tf.Variable(0, trainable=False)
-            self.learning_rate = exponential_decay(self.learning_rate, self.learning_rate_end,
-                                                   self.global_step, self.decay_steps,
-                                                   self.decay_in_epochs)
+            self.learning_rate = exp_decay(self.learning_rate, self.learning_rate_end,
+                                           self.global_step, self.decay_steps,
+                                           self.decay_in_epochs)
 
         optimizer = self._optimizer(self.learning_rate)
         return optimizer.minimize(self.loss, global_step=self.global_step)
@@ -55,12 +55,12 @@ class MLP_EXP_DECAY(object):
     @staticmethod
     def sample_params(rs):
         return {
-            'learning_rate': 10 ** rs.uniform(-3, -1)
+            'learning_rate': 10 ** rs.uniform(-2, -1)
         }
 
     @staticmethod
     def append_decay_params(params, rs, decay_steps=None):
         params['exponential_decay'] = True
-        params['learning_rate_end'] = 10 ** rs.uniform(-5, -3)
+        params['learning_rate_end'] = 10 ** rs.uniform(-5, -2)
         params['decay_steps'] = decay_steps if decay_steps is not None else rs.randint(1, 300)
-        params['decay_in_epochs'] = rs.randint(30, 300)
+        params['decay_in_epochs'] = 300  # rs.randint(30, 300)

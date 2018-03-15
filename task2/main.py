@@ -16,8 +16,8 @@ ensure_dir(log_dir)
 
 configs, learning_curves = load_data_as_numpy()
 
-# batch_size = 12
-batch_size = 6
+batch_size = 12
+# batch_size = 6
 train_epochs = 300
 patience = 40
 eval_every = 4
@@ -28,7 +28,8 @@ model = MLP_EXP_DECAY
 
 with tf.Session() as session:
     # params = {'learning_rate': 0.0019412167434611945, 'reg_weight': 0.001663258647698526}
-    params = {'learning_rate': 0.001}
+    # params = {'learning_rate': 0.001}
+    params = {'learning_rate': 0.09401708458290647}
     params['exponential_decay'] = True
     params['learning_rate_end'] = 0.00001
     params['decay_in_epochs'] = 250
