@@ -4,7 +4,7 @@ task 2:
 - submit plotting scripts to the repo (also add axis labels and a legend) (Matthias)
 - scatter plots as in Stefan's point 1 (Alex)
 - box plots from point 2 (Alex)
-- prepare results table and export to LaTeX (add exp decay results too) (Alex)
++ prepare results table and export to LaTeX (add exp decay results too) (Alex)
 
 task 3:
 - try Frank's idea and report the results (table entry) (Alex)

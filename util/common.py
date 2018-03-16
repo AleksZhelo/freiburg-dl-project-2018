@@ -60,8 +60,26 @@ def loss(y_hat, y):
     return np.mean(np.power(y_hat - y, 2))
 
 
+def task2_model_from_name(models, name):
+    for model in models:
+        if model.__name__.lower() == name.lower():
+            return model
+    return None
+
+
+def pd_column_key(column):
+    try:
+        return int(column.split(' ')[0])
+    except ValueError:
+        if column == 'params':
+            return 100
+        else:
+            return 0
+
+
 def print_pd_frame_from_multi_input_performances(performances, estimators):
     data = {
+        'loss_mean': np.mean(performances, axis=1).mean(axis=1),
         '5 points': np.mean(performances, axis=1)[:, 0],
         '10 points': np.mean(performances, axis=1)[:, 1],
         '20 points': np.mean(performances, axis=1)[:, 2],
@@ -73,8 +91,9 @@ def print_pd_frame_from_multi_input_performances(performances, estimators):
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
     pd.set_option('display.max_colwidth', 1000)
-    frame = frame[sorted(frame.columns.tolist(), key=lambda x: int(x.split(' ')[0]))]
+    frame = frame[sorted(frame.columns.tolist(), key=pd_column_key)]
     print(frame)
+    return frame
 
 
 def get_pd_frame_task2(losses, configs, estimators):
@@ -82,11 +101,23 @@ def get_pd_frame_task2(losses, configs, estimators):
         'loss': losses,
         'params': configs
     }
+    return pd.DataFrame(data, index=estimators)
+
+
+def get_pd_frame_task3(losses_mean, var_input_losses, configs, estimators):
+    data = {
+        'loss_mean': losses_mean,
+        '5 points': [v[0] for v in var_input_losses],
+        '10 points': [v[1] for v in var_input_losses],
+        '20 points': [v[2] for v in var_input_losses],
+        '30 points': [v[3] for v in var_input_losses],
+        # 'params': configs
+    }
     frame = pd.DataFrame(data, index=estimators)
+    frame = frame[sorted(frame.columns.tolist(), key=pd_column_key)]
     pd.set_option('display.height', 1000)
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)
     pd.set_option('display.width', 1000)
     pd.set_option('display.max_colwidth', 1000)
-
     return frame

@@ -43,10 +43,10 @@ configs, learning_curves = load_data_as_numpy()
 
 estimators = [
     'GradientBoostingRegressor(learning_rate=0.033, n_estimators=300)',
-    'linear_model.SGDRegressor(loss=\'squared_loss\')',
-    'linear_model.SGDRegressor(loss=\'epsilon_insensitive\', epsilon=0.005)',
+    # 'linear_model.SGDRegressor(loss=\'squared_loss\')',
+    # 'linear_model.SGDRegressor(loss=\'epsilon_insensitive\', epsilon=0.005)',
     'linear_model.LinearRegression()',
-    'linear_model.Ridge(alpha=0.1)',
+    # 'linear_model.Ridge(alpha=0.1)',
     'RandomForestRegressor(n_estimators=30)',
     # 'SVR(C=2.0, kernel=\'linear\', epsilon=0.005)',
     'BaggingRegressor()'
@@ -96,7 +96,7 @@ for m_idx, model_desc in enumerate(estimators):
 
     print('mean CV performance: {0} \n'.format(performances[m_idx].mean(axis=0)))
 
-print_pd_frame_from_multi_input_performances(performances, estimators)
+print_pd_frame_from_multi_input_performances(performances, [e.split('(')[0] for e in estimators])
 
 # steps = test_curves.shape[1]
 # fig = plt.figure(figsize=(10, 10))

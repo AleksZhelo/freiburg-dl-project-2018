@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from models.mlp import MLP
+from models.mlp.mlp import MLP
 from util.decorators import define_scope
 
 

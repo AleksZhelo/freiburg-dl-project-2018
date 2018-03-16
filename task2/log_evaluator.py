@@ -5,7 +5,7 @@ import json
 import argparse
 import os
 
-from util.common import get_pd_frame_task2
+from util.common import get_pd_frame_task2, get_pd_frame_task3
 
 
 def parse_args():
@@ -31,6 +31,12 @@ def parse_args():
         help='Compiles a best results per model table.'
     )
 
+    parser.add_argument(
+        '--rnn',
+        action='store_true',
+        help='Indicates whether the results were obtained from the RNN model.'
+    )
+
     return parser.parse_args()
 
 
@@ -40,6 +46,44 @@ def parse_old_format(ls):
         split = l.split('loss:')[1].split('params:')
         dat.append((float(split[0][:-2]), eval(split[1])))
     return dat
+
+
+def collect_best_results_per_model(total_data):
+    model_to_result = dict()
+    model_to_result_metadata = dict()
+    for entry in total_data:
+        model = get_model_name(entry[2])
+
+        entry_1_full = entry[1].copy()
+        if not args.rnn:
+            if 'config' in entry[1]:
+                entry[1] = entry[1]['config']
+
+        if 'exponential_decay' in entry[1] and entry[1]['exponential_decay']:
+            model += ' with lr decay'
+            if 'decay_rate' in entry[1]:
+                model += ' tf'
+        model = model.lower()
+
+        if model in model_to_result:
+            if model_to_result[model][0] > entry[0]:
+                model_to_result[model] = entry
+                model_to_result_metadata[model] = entry_1_full
+        else:
+            model_to_result[model] = entry
+            model_to_result_metadata[model] = entry_1_full
+    return model_to_result, model_to_result_metadata
+
+
+def get_model_name(file_name):
+    base_name = os.path.basename(file_name)
+    base_name, _ = os.path.splitext(base_name)
+    model = base_name.split('2018')[0]
+    if 'hyperband' in model:
+        model = model.split('hyperband')[0]
+    if model[-1] == '_':
+        model = model[:-1]
+    return model
 
 
 if __name__ == '__main__':
@@ -106,33 +150,36 @@ if __name__ == '__main__':
         total_data = np.array(total_data)
         total_data = total_data[np.argsort(total_data[:, 0])]
 
-        model_to_result = dict()
-        for entry in total_data:
-            file_name = os.path.basename(entry[2])
-            file_name, _ = os.path.splitext(file_name)
-            model = file_name.split('2018')[0]
-            if 'hyperband' in model:
-                model = model.split('hyperband')[0]
-            if model[-1] == '_':
-                model = model[:-1]
+        model_to_result, model_to_result_metadata = \
+            collect_best_results_per_model(total_data)
 
-            if 'config' in entry[1]:
-                entry[1] = entry[1]['config']
-
-            if 'exponential_decay' in entry[1] and entry[1]['exponential_decay']:
-                model += ' with lr decay'
-                if 'decay_rate' in entry[1]:
-                    model += ' tf'
-            model = model.lower()
-
-            if model in model_to_result:
-                if model_to_result[model][0] > entry[0]:
-                    model_to_result[model] = entry
-            else:
-                model_to_result[model] = entry
+        tasks = []
+        if not args.rnn:
+            for key, entry in model_to_result.items():
+                task = dict()
+                task['name'] = get_model_name(entry[2])
+                metadata = model_to_result_metadata[key]
+                if 'epochs' in metadata:
+                    task['train_epochs'] = metadata['epochs']
+                task['params'] = entry[1].copy()
+                if 'batch_size' in task['params']:
+                    task['batch_size'] = task['params']['batch_size']
+                    del task['params']['batch_size']
+                tasks.append(task)
+            with open('task2_best_models.txt', 'w') as f:
+                json.dump(tasks, f)
+        else:
+            pass
 
         losses = [entry[0] for entry in model_to_result.values()]
-        params = [entry[1] for entry in model_to_result.values()]
+        extras = None
+
+        if not args.rnn:
+            params = [entry[1] for entry in model_to_result.values()]
+        else:
+            params = [entry[1]['config'] for entry in model_to_result.values()]
+            extras = [entry[1]['extra'] for entry in model_to_result.values()]
+
         for config in params:
             if 'decay_steps' in config:
                 del config['decay_steps']
@@ -158,5 +205,12 @@ if __name__ == '__main__':
                   for config in params]
 
         estimators = [key for key in model_to_result.keys()]
-        frame = get_pd_frame_task2(losses, params, estimators)
-        print(frame)
+
+        if args.rnn:
+            var_input_losses = [e['cv_test'] for e in extras]
+            frame = get_pd_frame_task3(losses, var_input_losses, params, estimators)
+            frame.to_csv('task3_table.csv')
+            print(frame)
+        else:
+            frame = get_pd_frame_task2(losses, params, estimators)
+            print(frame)
