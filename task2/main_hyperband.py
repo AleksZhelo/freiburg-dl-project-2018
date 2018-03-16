@@ -13,6 +13,7 @@ from models.mlp import MLP
 from models.mlp_decov import MLP_DeCov
 from models.mlp_l1 import MLP_L1
 from models.mlp_l1_elu import MLP_L1_ELU
+from models.mlp_l1_exp_decay import MLP_L1_EXP_DECAY
 from models.mlp_l1_sgd import MLP_L1_SGD
 from models.mlp_l2 import MLP_L2
 from models.mlp_l2_elu import MLP_L2_ELU
@@ -51,14 +52,14 @@ if __name__ == '__main__':
 
     configs, learning_curves = load_data_as_numpy()
 
-    batch_size = None  # also sampled randomly
+    batch_size = 12  # if None also sampled randomly
     max_epochs = 300
     eval_every = 4
     normalize = True
     decay_lr = True
-    run_time = 8 * 3600
+    run_time = 4 * 3600
 
-    model = MLP
+    model = MLP_L1_EXP_DECAY
     rs = np.random.RandomState()
     hyperband = Hyperband(gen_sample_params(model, decay_lr, rs),
                           evaluate_model, max_epochs=max_epochs, reduction_factor=3)
