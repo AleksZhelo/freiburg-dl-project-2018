@@ -1,16 +1,15 @@
 import tensorflow as tf
 
-from models.lstm_tf_decov import LSTM_TF_DeCov
+from models.rnn.lstm_tf_decov import LSTM_TF_DeCov
 from util.decorators import define_scope
 
 
-class LSTM_TF_Dropout(LSTM_TF_DeCov):
+class LSTM_TF_L1(LSTM_TF_DeCov):
 
     # noinspection PyStatementEffect
     def __init__(self, input_tensor, target, lstm_initial_state, phase, learning_rate=0.001, batch_size=12,
-                 reg_weight=0.001, drop_rate=0.5, exponential_decay=False, decay_steps=None, decay_rate=0.99):
-        self.drop_rate = drop_rate
-        super(LSTM_TF_Dropout, self).__init__(
+                 reg_weight=0.001, exponential_decay=False, decay_steps=None, decay_rate=0.99):
+        super(LSTM_TF_L1, self).__init__(
             input_tensor, target, lstm_initial_state, phase, learning_rate, batch_size,
             reg_weight, exponential_decay, decay_steps, decay_rate
         )
@@ -26,19 +25,21 @@ class LSTM_TF_Dropout(LSTM_TF_DeCov):
             initial_state=self.lstm_initial_state, dtype=tf.float32
         )
 
-        self.first_dense = tf.layers.dense(inputs=self.lstm_outputs, units=64, activation=tf.nn.relu)
-        drop = tf.layers.dropout(self.first_dense, training=self.phase, rate=self.drop_rate)
-        self.last_dense = tf.layers.dense(inputs=drop, units=64, activation=tf.nn.relu)
+        self.first_dense = tf.layers.dense(inputs=self.lstm_outputs, units=64, activation=tf.nn.relu,
+                                           kernel_regularizer=tf.contrib.layers.l1_regularizer(scale=self.reg_weight))
+        self.last_dense = tf.layers.dense(inputs=self.first_dense, units=64, activation=tf.nn.relu,
+                                          kernel_regularizer=tf.contrib.layers.l1_regularizer(scale=self.reg_weight))
         x = tf.layers.dense(inputs=self.last_dense, units=1, activation=None)
         return x
 
     @define_scope
     def loss(self):
-        return tf.losses.mean_squared_error(self.target, self.prediction)
+        reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+        return tf.losses.mean_squared_error(self.target, self.prediction) + tf.add_n(reg_losses)
 
     @staticmethod
     def sample_params(rs):
         return {
             'learning_rate': 10 ** rs.uniform(-5, -1),
-            'drop_rate': rs.uniform(0.0, 0.8)
+            'reg_weight': 10 ** rs.uniform(-5, -1)
         }

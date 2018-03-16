@@ -1,15 +1,15 @@
 import tensorflow as tf
 
-from models.lstm_tf_decov import LSTM_TF_DeCov
+from models.rnn.lstm_tf_decov import LSTM_TF_DeCov
 from util.decorators import define_scope
 
 
-class LSTM_TF_L1(LSTM_TF_DeCov):
+class LSTM_TF_L2(LSTM_TF_DeCov):
 
     # noinspection PyStatementEffect
     def __init__(self, input_tensor, target, lstm_initial_state, phase, learning_rate=0.001, batch_size=12,
                  reg_weight=0.001, exponential_decay=False, decay_steps=None, decay_rate=0.99):
-        super(LSTM_TF_L1, self).__init__(
+        super(LSTM_TF_L2, self).__init__(
             input_tensor, target, lstm_initial_state, phase, learning_rate, batch_size,
             reg_weight, exponential_decay, decay_steps, decay_rate
         )
@@ -26,9 +26,9 @@ class LSTM_TF_L1(LSTM_TF_DeCov):
         )
 
         self.first_dense = tf.layers.dense(inputs=self.lstm_outputs, units=64, activation=tf.nn.relu,
-                                           kernel_regularizer=tf.contrib.layers.l1_regularizer(scale=self.reg_weight))
+                                           kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=self.reg_weight))
         self.last_dense = tf.layers.dense(inputs=self.first_dense, units=64, activation=tf.nn.relu,
-                                          kernel_regularizer=tf.contrib.layers.l1_regularizer(scale=self.reg_weight))
+                                          kernel_regularizer=tf.contrib.layers.l2_regularizer(scale=self.reg_weight))
         x = tf.layers.dense(inputs=self.last_dense, units=1, activation=None)
         return x
 
@@ -41,5 +41,5 @@ class LSTM_TF_L1(LSTM_TF_DeCov):
     def sample_params(rs):
         return {
             'learning_rate': 10 ** rs.uniform(-5, -1),
-            'reg_weight': 10 ** rs.uniform(-5, -1)
+            'reg_weight': 10 ** rs.uniform(-5, -3)
         }

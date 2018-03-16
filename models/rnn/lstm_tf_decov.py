@@ -95,8 +95,8 @@ class LSTM_TF_DeCov(object):
     @staticmethod
     def sample_params(rs):
         return {
-            'learning_rate': 10 ** rs.uniform(-5, -1),
-            'reg_weight': 10 ** rs.uniform(-3.5, 1)
+            'learning_rate': 10 ** rs.uniform(-3.5, -1),
+            'reg_weight': 10 ** rs.uniform(-3.5, 1.5)
         }
 
     @staticmethod

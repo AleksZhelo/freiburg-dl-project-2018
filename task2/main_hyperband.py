@@ -9,14 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 from hyperband.hyperband import Hyperband
-from models.mlp import MLP
-from models.mlp_decov import MLP_DeCov
-from models.mlp_l1 import MLP_L1
-from models.mlp_l1_elu import MLP_L1_ELU
-from models.mlp_l1_exp_decay import MLP_L1_EXP_DECAY
-from models.mlp_l1_sgd import MLP_L1_SGD
-from models.mlp_l2 import MLP_L2
-from models.mlp_l2_elu import MLP_L2_ELU
+from models.mlp.mlp_l1_exp_decay import MLP_L1_EXP_DECAY
 from task2.run_model import run_model
 from util.common import ensure_dir, date2str
 from util.loader import load_data_as_numpy

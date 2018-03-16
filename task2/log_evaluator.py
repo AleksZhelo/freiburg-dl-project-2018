@@ -55,7 +55,7 @@ if __name__ == '__main__':
                     continue
 
         training_settings = None
-        if 'hyperband' in os.path.basename(file):
+        if 'hyperband' or 'random_search' in os.path.basename(file):
             if 'LSTM' in os.path.basename(file):
                 training_settings = data[-1]
                 data = data[:-1]
@@ -79,6 +79,15 @@ if __name__ == '__main__':
         total_data = total_data[np.argsort(total_data[:, 0])]
         for k, entry in enumerate(total_data[:30]):
             print('top {1} loss: {0:.6f}'.format(entry[0], k + 1))
+            if 'extra' in entry[1]:
+                if 'cv_valid' in entry[1]['extra']:
+                    print('cv_valid: {0}'.format(entry[1]['extra']['cv_valid']))
+                    del entry[1]['extra']['cv_valid']
+                if 'cv_test' in entry[1]['extra']:
+                    print('cv_test: {0}'.format(entry[1]['extra']['cv_test']))
+                    del entry[1]['extra']['cv_test']
             print('file: {0}'.format(entry[2]))
-            print('config: {0}'.format(entry[1]))
+            print('config: {0}'.format(entry[1]['config'] if 'config' in entry[1] else entry[1]))
+            if 'extra' in entry[1]:
+                print('extra: {0}'.format(entry[1]['extra']))
             print()

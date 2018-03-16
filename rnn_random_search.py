@@ -5,15 +5,14 @@ import gc
 import json
 import os
 import platform
+import time
 from datetime import datetime
 
 import multiprocessing
 import numpy as np
 import tensorflow as tf
 
-from hyperband.hyperband import Hyperband
 from models.rnn.lstm_tf_decov import LSTM_TF_DeCov
-from models.rnn.lstm_tf_decov_mlp_init import LSTM_TF_DeCov_MLP_init
 from run_rnn_model import run_rnn_model
 from util.common import ensure_dir, date2str
 from util.loader import load_data_as_numpy
@@ -73,10 +72,9 @@ if __name__ == '__main__':
     decay_lr = False
     early_stopping = True
     patience = 250
-    run_time = 1 * 3600
+    run_time = 0.01 * 3600
 
-    model = LSTM_TF_DeCov_MLP_init
-    # model = LSTM_TF_DeCov
+    model = LSTM_TF_DeCov
     # model = LSTM_TF_Dropout
     # model = LSTM_TF_L2
     # model = LSTM_TF_L1
@@ -84,33 +82,35 @@ if __name__ == '__main__':
 
     def worker(process_num, managed_results):
         rs = np.random.RandomState()
-        hyperband = Hyperband(
-            gen_sample_params(model, decay_lr, rs),
-            functools.partial(
-                evaluate_model,
-                model_desc='{0}_{1}_process{2}'.format(
-                    model.__name__, platform.node(), process_num
-                )
-            ),
-            max_epochs=train_epochs, reduction_factor=5, min_r=8
+        time.sleep(process_num)
+        start = datetime.now()
+        run_model = functools.partial(
+            evaluate_model,
+            model_desc='{0}_{1}_rs_process{2}'.format(
+                model.__name__, platform.node(), process_num
+            )
         )
-        managed_results.extend(hyperband.run(early_stopping=early_stopping))
+        sample_params = gen_sample_params(model, decay_lr, rs)
+
+        while (datetime.now() - start).total_seconds() < run_time:
+            params = sample_params()
+            cv_test_loss, extras = run_model(params, train_epochs)
+            managed_results.append(dict(loss=cv_test_loss, epochs=train_epochs,
+                                        config=params, extra=extras))
 
 
     manager = multiprocessing.Manager()
     results = manager.list()
-    start = datetime.now()
 
-    while (datetime.now() - start).total_seconds() < run_time:
-        jobs = []
-        for i in range(3):
-            p = multiprocessing.Process(target=worker, args=(i, results))
-            jobs.append(p)
-            p.start()
+    jobs = []
+    for i in range(3):
+        p = multiprocessing.Process(target=worker, args=(i, results))
+        jobs.append(p)
+        p.start()
 
-        for proc in jobs:
-            proc.join()
-        jobs[:] = []
+    for proc in jobs:
+        proc.join()
+    jobs[:] = []
 
     results_non_managed = [x for x in results]
     results_non_managed.append(
@@ -129,6 +129,6 @@ if __name__ == '__main__':
     )
 
     # TODO: write after every iteration
-    with open(os.path.join(res_dir, '{0}_hyperband_{1}'.format(
+    with open(os.path.join(res_dir, '{0}_random_search_{1}'.format(
             model.__name__, date2str(datetime.now()))), 'w') as f:
         json.dump(results_non_managed, f)

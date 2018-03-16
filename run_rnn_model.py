@@ -6,9 +6,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import KFold
 
-from models.lstm_tf_decov import LSTM_TF_DeCov
-from models.lstm_tf_dropout import LSTM_TF_Dropout
-from models.lstm_tf_l2 import LSTM_TF_L2
+from models.rnn.lstm_tf_decov_mlp_init import LSTM_TF_DeCov_MLP_init
 from util.common import normalized, ensure_dir, fill_pred_lstm_batch, fill_lstm_batch, date2str
 
 from util.loader import load_data_as_numpy
@@ -272,12 +270,13 @@ if __name__ == '__main__':
 
     # model = LSTM_TF_DeCov
     # model = LSTM_TF_Dropout
-    model = LSTM_TF_L2
+    # model = LSTM_TF_L2
+    model = LSTM_TF_DeCov_MLP_init
 
     with tf.Session() as session:
         params = {
-            'learning_rate': 0.001,
-            'reg_weight': 0.0005,
+            'learning_rate': 0.005,
+            'reg_weight':  0.1,
             # 'drop_rate': 0.00,
             'batch_size': batch_size,
             'exponential_decay': False,
@@ -290,7 +289,7 @@ if __name__ == '__main__':
                           model, n_input_train, n_input_test, normalize,
                           train_epochs, batch_size, eval_every, params,
                           early_stopping=early_stopping, patience=patience,
-                          n_folds=3, tf_seed=1123, numpy_seed=1123, verbose=False)
+                          n_folds=3, tf_seed=1123, numpy_seed=1123, verbose=True)
 
         with open(os.path.join(res_dir, 'rnn_results.txt'), 'a') as f:
             f.write('{0}, started {1}, finished {2}\n'.format(

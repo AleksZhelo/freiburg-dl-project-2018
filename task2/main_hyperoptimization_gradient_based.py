@@ -9,8 +9,7 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from models.mlp_decov import MLP_DeCov
-from models.mlp_l1 import MLP_L1
+from models.mlp.mlp_decov import MLP_DeCov
 from task2.run_model import run_model
 from util.common import ensure_dir, date2str
 from util.loader import load_data_as_numpy
