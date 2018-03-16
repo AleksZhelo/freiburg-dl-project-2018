@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 
+colors = ["black", "blue", "red", "green", "purple"]
+
 def scatter(y, y_hat, title = None, file_name = None):
     """
     y : list of true values
@@ -32,15 +34,15 @@ def extrapolation(true_curve,
     n_steps : last epoch of the extrapolation curves
     file_name : path to file where the plot shall be saved
     """
-    plt.plot(true_curve)
+    plt.plot(true_curve, color=colors[0])
     plt.xlim(0, n_steps - 1)
-    for extrapolation in extrapolation_list:
+    for i, extrapolation in enumerate(extrapolation_list):
         extra_curve = list(extrapolation[1])
         extra_len = len(extra_curve)
         # add last point of true curve to predicted curve:
         extra_curve = [true_curve[n_steps - extra_len - 1]] + extra_curve
         extra_len += 1
-        plt.plot(range(n_steps - extra_len, n_steps), extra_curve)
+        plt.plot(range(n_steps - extra_len, n_steps), extra_curve, color=colors[(i + 1) % len(colors)])
     plt.xlabel("epoch")
     plt.ylabel("validation error")
     if true_curve[-1] > 0.8:
@@ -54,3 +56,44 @@ def extrapolation(true_curve,
         plt.close()
     else:
         plt.show()
+
+def boxplot(errors_list,
+            squared=False,
+            logarithmic=True,
+            file_name=None):
+    """
+    errors_list : a list of tuples (label, list of errors)
+    squared : True for squared errors, False for absolute errors
+    logarithmic : whether y-axis should be logarithmic
+    file_name : path to file where the plot shall be saved
+    """
+    for i in range(len(errors_list)):
+        if squared:
+            errors_list[i] = (errors_list[i][0], [val ** 2 for val in errors_list[i][1]])
+        else:
+            errors_list[i] = (errors_list[i][0], [abs(val) for val in errors_list[i][1]])
+    ax = plt.subplot()
+    ax.boxplot([errors[1] for errors in errors_list],
+                     labels=[errors[0] for errors in errors_list])
+    if logarithmic:
+        ax.set_yscale("log")
+    plt.ylabel("squared error" if squared else "absolute error")
+    if file_name != None:
+        plt.savefig(file_name)
+        plt.close()
+    else:
+        plt.show()
+
+
+if __name__ == "__main__":
+    import numpy as np
+    n = 100
+    y = np.random.uniform(size=n)
+    y_hat = np.random.uniform(size=n)
+    plt.figure(0)
+    scatter(y, y_hat, "test title")
+    plt.figure(1)
+    extrapolation(y[:50], [("test", y_hat[-50:])], n_steps=100)
+    plt.figure(2)
+    boxplot([("test", [y[i] - y_hat[i] for i in range(n)])])
+    

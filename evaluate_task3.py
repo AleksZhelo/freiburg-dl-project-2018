@@ -6,11 +6,11 @@ from util.time_series_data import get_time_series, reshape_X
 from preprocessing.standard_scaler import StandardScaler
 from util.plots import scatter, extrapolation
 
-def predict_whole_sequences(model, X, config_step):
+def predict_whole_sequences(model, X, config_step, until=40):
     n = X.shape[0]
     true_steps = X.shape[1]
     d = X.shape[2]
-    final_step = 41 if config_step else 40
+    final_step = until + 1 if config_step else until
     XX = np.zeros((n, final_step, d))
     XX[:, :true_steps, :] = X
     for j in range(true_steps, final_step):
@@ -21,7 +21,7 @@ def predict_whole_sequences(model, X, config_step):
     return pred[:, (true_steps - 1):, 0]
 
 configs, learning_curves = load_data(source_dir='./data')
-
+until = 40
 
 for n_steps in [-1, 5, 10, 20]:
     randomize_length = n_steps == -1
@@ -73,30 +73,33 @@ for n_steps in [-1, 5, 10, 20]:
                 x_steps = test_steps + 1
             else:
                 x_steps = test_steps
-            preds[test_steps] = predict_whole_sequences(model, X_test[:, :x_steps, :], config_step)
+            preds[test_steps] = predict_whole_sequences(model, X_test[:, :x_steps, :], config_step, until=until)
         
         for i in range(n_test):
-            file_name = "task3_plots/%s_fold%i_curve%i.png" % ("rnd" if randomize_length else (str(n_steps) + "s"),
-                                                               fold,
-                                                               i)
+            file_name = "task3_plots/%s_fold%i_curve%i_until%i.png" % ("rnd" if randomize_length else (str(n_steps) + "s"),
+                                                                       fold,
+                                                                       i,
+                                                                       until)
             extrapolation(learning_curves_test[i],
                           [("5 steps", preds[5][i]),
                            ("10 steps", preds[10][i]),
                            ("20 steps", preds[20][i]),
                            ("30 steps", preds[30][i])],
-                          file_name = file_name)
+                          file_name = file_name,
+                          n_steps=until)
             y_e40.append(learning_curves_test[i][-1])
             for test_steps in [5, 10, 20, 30]:
                 y_hat_e40[test_steps].append(preds[test_steps][i, -1])
     
-    for test_steps in [5, 10, 20, 30]:
-        mse = np.mean(np.power(np.array(y_e40) - np.array(y_hat_e40[test_steps]), 2))
-        title = "tr = %s, te = %i, MSE = %f" % ("rnd" if randomize_length else str(n_steps),
-                                                test_steps,
-                                                mse)
-        file_name = "task3_plots/%s_pred%i_scatter.png" % ("rnd" if randomize_length else (str(n_steps) + "s"),
-                                                           test_steps)
-        scatter(y_e40,
-                y_hat_e40[test_steps],
-                title,
-                file_name)
+    if until == 40:
+        for test_steps in [5, 10, 20, 30]:
+            mse = np.mean(np.power(np.array(y_e40) - np.array(y_hat_e40[test_steps]), 2))
+            title = "tr = %s, te = %i, MSE = %f" % ("rnd" if randomize_length else str(n_steps),
+                                                    test_steps,
+                                                    mse)
+            file_name = "task3_plots/%s_pred%i_scatter.png" % ("rnd" if randomize_length else (str(n_steps) + "s"),
+                                                               test_steps)
+            scatter(y_e40,
+                    y_hat_e40[test_steps],
+                    title,
+                    file_name)
