@@ -16,7 +16,6 @@ class MLP_DeCov(MLP):
 
     @define_scope
     def loss(self):
-        # TODO: try on first hidden?
         mean_activation = tf.reduce_mean(self.first_hidden, axis=0)
         v = self.first_hidden - mean_activation
         cov = tf.matmul(tf.transpose(v), v)

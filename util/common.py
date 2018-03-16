@@ -75,3 +75,18 @@ def print_pd_frame_from_multi_input_performances(performances, estimators):
     pd.set_option('display.max_colwidth', 1000)
     frame = frame[sorted(frame.columns.tolist(), key=lambda x: int(x.split(' ')[0]))]
     print(frame)
+
+
+def get_pd_frame_task2(losses, configs, estimators):
+    data = {
+        'loss': losses,
+        'params': configs
+    }
+    frame = pd.DataFrame(data, index=estimators)
+    pd.set_option('display.height', 1000)
+    pd.set_option('display.max_rows', 500)
+    pd.set_option('display.max_columns', 500)
+    pd.set_option('display.width', 1000)
+    pd.set_option('display.max_colwidth', 1000)
+
+    return frame
