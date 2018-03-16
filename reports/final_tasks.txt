@@ -1,0 +1,26 @@
+
+
+task 2:
+- submit plotting scripts to the repo (also add axis labels and a legend) (Matthias)
+- scatter plots as in Stefan's point 1 (Alex)
+- box plots from point 2 (Alex)
+- prepare results table and export to LaTeX (add exp decay results too) (Alex)
+
+task 3:
+- try Frank's idea and report the results (table entry) (Alex)
+
+- prepare some extrapolation (to step 100) plots (Alex)
+  tile of four plots selected by most interesting (some work, some don't)
+
+- extrapolation from 5, 10, 20, 30 to 40 - same tile of four
+  each for their own models
+
+- add DeCov scatter plots? (Alex)
+
+- prepare hyperparam optimization results table and export to LaTeX (Alex)
+
+- boxplot - report results predicting from first 10 points
+  best curve baseline, best fixed baseline, two best (Al. and Mat.) trained on random
+  and two best (same) trained on 10 steps
+  send the errors to Mat. (Alex)
+  plot the thing (Mat.)
