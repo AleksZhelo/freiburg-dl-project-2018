@@ -55,7 +55,7 @@ if __name__ == '__main__':
                     continue
 
         training_settings = None
-        if 'hyperband' or 'random_search' in os.path.basename(file):
+        if 'hyperband' in os.path.basename(file) or 'random_search' in os.path.basename(file):
             if 'LSTM' in os.path.basename(file):
                 training_settings = data[-1]
                 data = data[:-1]
