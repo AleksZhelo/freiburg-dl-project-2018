@@ -62,7 +62,8 @@ if __name__ == '__main__':
     model = MLP_L1_EXP_DECAY
     rs = np.random.RandomState()
     hyperband = Hyperband(gen_sample_params(model, decay_lr, rs),
-                          evaluate_model, max_epochs=max_epochs, reduction_factor=3)
+                          evaluate_model,
+                          max_epochs=max_epochs, reduction_factor=3, min_r=5)
 
     results = []
     start = datetime.now()
@@ -71,6 +72,6 @@ if __name__ == '__main__':
         results.extend(hyperband.run())
 
     # TODO: write after every iteration
-    with open(os.path.join(res_dir, '{0}_hyperband_{1}'.format(
+    with open(os.path.join(res_dir, '{0}_hyperband_min_r_5_{1}'.format(
             model.__name__, date2str(datetime.now()))), 'w') as f:
         json.dump(results, f)

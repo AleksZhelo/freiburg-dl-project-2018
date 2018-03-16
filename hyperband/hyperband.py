@@ -74,8 +74,8 @@ class Hyperband(object):
 
 
 if __name__ == "__main__":
-    # hyperband = Hyperband(None, None, max_epochs=300, reduction_factor=3)
-    hyperband = Hyperband(None, None, max_epochs=1500, reduction_factor=5, min_r=5)
+    hyperband = Hyperband(None, None, max_epochs=300, reduction_factor=3, min_r=5)
+    # hyperband = Hyperband(None, None, max_epochs=1500, reduction_factor=5, min_r=5)
     hyperband.run(verbose=True, dry_run=True, early_stopping=False)
     # hyperband = Hyperband(lambda: dict(test=np.random.randint(0, 2)),
     #                       lambda x, r: (np.random.rand(1)[0],
