@@ -1,15 +1,17 @@
+import os
 from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import KFold
 
-from util.common import normalized, fill_batch
+from util.common import normalized, fill_batch, date2str
 
 
 # TODO: add checkpoints to restore best weights
 def run_model(session, configs, learning_curves, log_dir,
               model_class, normalize, train_epochs, batch_size, eval_every, params,
+              early_stopping=False, patience=40, save_dir=None, model_desc=None,
               tf_seed=1123, numpy_seed=1123, verbose=True):
     if batch_size is None:
         batch_size = params['batch_size']
@@ -28,6 +30,15 @@ def run_model(session, configs, learning_curves, log_dir,
     phase = tf.placeholder(tf.bool, name='phase')
 
     mlp = model_class(input_tensor, target, phase, **params)
+
+    saver = tf.train.Saver()
+
+    if model_desc is None:
+        model_desc = '{0}_{1}_{2}'.format(
+            model_class.__name__,
+            '_'.join(['{0}={1}'.format(a, b) for a, b in zip(params.keys(), params.values())]),
+            date2str(datetime.now())
+        )
 
     if log_dir is not None:
         train_summary_writer = tf.summary.FileWriter(
@@ -58,14 +69,33 @@ def run_model(session, configs, learning_curves, log_dir,
         session.run(tf.global_variables_initializer())
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
-        train_configs = configs[train_indices]
-        train_curves = learning_curves[train_indices]
+        if early_stopping:
+            rs_.shuffle(train_indices)
+            valid_length = int(np.ceil(train_indices.shape[0] * 0.2))
+            valid_indices = train_indices[:valid_length]
+            train_indices = train_indices[valid_length:]
+
+            train_configs = configs[train_indices]
+            train_curves = learning_curves[train_indices]
+            valid_configs = configs[valid_indices]
+            valid_curves = learning_curves[valid_indices]
+
+            best_valid = float('inf')
+            counter = 0
+        else:
+            train_configs = configs[train_indices]
+            train_curves = learning_curves[train_indices]
+            valid_configs = None
+            valid_curves = None
+
         test_configs = configs[test_indices]
         test_curves = learning_curves[test_indices]
 
         if normalize:
             train_configs, mean, std = normalized(train_configs)
             test_configs, _, _ = normalized(test_configs, mean, std)
+            if early_stopping:
+                valid_configs, _, _ = normalized(valid_configs, mean, std)
 
         total_epochs = 0
         curr_steps = 0
@@ -78,6 +108,33 @@ def run_model(session, configs, learning_curves, log_dir,
                 curr_steps += 1
 
             total_epochs += 1
+
+            if total_epochs % eval_every == 0 and early_stopping:
+                valid_loss = session.run(mlp.loss_pure, {mlp.input_tensor: valid_configs,
+                                                         mlp.target: valid_curves[:, -1].reshape(-1, 1),
+                                                         phase: 0})
+
+                if valid_loss < best_valid:
+                    best_valid = valid_loss
+                    counter = 0
+                    if save_dir is not None:
+                        if verbose:
+                            print('saved model, epoch: {0}, loss: {1}'.format(total_epochs, valid_loss))
+                        saver.save(session, os.path.join(
+                            save_dir,
+                            '{0}_fold_{1}.ckpt'.format(model_desc, current_fold)
+                        ))
+                else:
+                    counter += 1
+                    if counter > patience:
+                        if verbose:
+                            print('restored model')
+                        saver.restore(session, os.path.join(
+                            save_dir,
+                            '{0}_fold_{1}.ckpt'.format(model_desc, current_fold)
+                        ))
+                        break
+
             if log_dir is not None:
                 if total_epochs % eval_every == 0:
                     sm, t_loss = session.run([t_loss_summary, mlp.loss],

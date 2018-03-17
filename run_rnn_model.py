@@ -38,6 +38,8 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
 
     rnn = model_class(input_tensor, target, initial_state, phase, **params)
 
+    saver = tf.train.Saver()
+
     if model_desc is None:
         model_desc = '{0}_{1}_{2}'.format(
             model_class.__name__,
@@ -55,7 +57,7 @@ def run_rnn_model(session, configs, learning_curves, log_dir,
     y = np.zeros((batch_size, n_input if n_input is not None else 20, 1), dtype=np.float32)
 
     k_fold = KFold(n_splits=n_folds, shuffle=True, random_state=1)
-    saver = tf.train.Saver()
+
     performances_valid = -np.ones((n_folds, 4))
     performances_test = np.zeros((n_folds, 4))
     stopped_early = np.zeros(n_folds)
@@ -276,7 +278,7 @@ if __name__ == '__main__':
     with tf.Session() as session:
         params = {
             'learning_rate': 0.005,
-            'reg_weight':  0.1,
+            'reg_weight': 0.1,
             # 'drop_rate': 0.00,
             'batch_size': batch_size,
             'exponential_decay': False,

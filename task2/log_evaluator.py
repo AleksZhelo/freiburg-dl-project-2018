@@ -95,6 +95,8 @@ if __name__ == '__main__':
 
     total_data = []
     for file in args.files:
+        if os.path.isdir(file):
+            continue
         with open(file, 'r') as f:
             try:
                 data = json.load(f)
@@ -213,4 +215,5 @@ if __name__ == '__main__':
             print(frame)
         else:
             frame = get_pd_frame_task2(losses, params, estimators)
+            frame.to_latex('../reports/task2_table.tex')
             print(frame)

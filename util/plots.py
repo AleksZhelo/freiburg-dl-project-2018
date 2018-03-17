@@ -9,6 +9,7 @@ def scatter(y, y_hat, title = None, file_name = None):
     title : the plot's title
     file_name : path to file where the plot shall be saved
     """
+    plt.figure(figsize=(6, 6))
     plt.scatter(y, y_hat)
     plt.xlim(0, 1)
     plt.ylim(0, 1)
@@ -72,6 +73,7 @@ def boxplot(errors_list,
             errors_list[i] = (errors_list[i][0], [val ** 2 for val in errors_list[i][1]])
         else:
             errors_list[i] = (errors_list[i][0], [abs(val) for val in errors_list[i][1]])
+    plt.figure(figsize=(10, 6))
     ax = plt.subplot()
     ax.boxplot([errors[1] for errors in errors_list],
                      labels=[errors[0] for errors in errors_list])
@@ -96,4 +98,3 @@ if __name__ == "__main__":
     extrapolation(y[:50], [("test", y_hat[-50:])], n_steps=100)
     plt.figure(2)
     boxplot([("test", [y[i] - y_hat[i] for i in range(n)])])
-    
