@@ -27,6 +27,7 @@ def scatter(y, y_hat, title = None, file_name = None):
 def extrapolation(true_curve,
                   extrapolation_list,
                   n_steps=40,
+                  title=None,
                   file_name=None):
     """
     true_curve : list with true validation errors per epoch
@@ -41,8 +42,9 @@ def extrapolation(true_curve,
         extra_curve = list(extrapolation[1])
         extra_len = len(extra_curve)
         # add last point of true curve to predicted curve:
-        extra_curve = [true_curve[n_steps - extra_len - 1]] + extra_curve
-        extra_len += 1
+        if extra_len <= len(true_curve):
+            extra_curve = [true_curve[n_steps - extra_len - 1]] + extra_curve
+            extra_len += 1
         plt.plot(range(n_steps - extra_len, n_steps), extra_curve, color=colors[(i + 1) % len(colors)])
     plt.xlabel("epoch")
     plt.ylabel("validation error")
@@ -52,6 +54,8 @@ def extrapolation(true_curve,
         legend_pos = "upper right"
     plt.legend(["true"] + [extra[0] for extra in extrapolation_list],
                loc = legend_pos)
+    if title != None:
+        plt.title(title)
     if file_name != None:
         plt.savefig(file_name)
         plt.close()

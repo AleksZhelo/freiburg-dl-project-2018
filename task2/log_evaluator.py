@@ -113,8 +113,9 @@ if __name__ == '__main__':
             if 'LSTM' in os.path.basename(file):
                 training_settings = data[-1]
                 data = data[:-1]
-            data = [(d['loss'], d, file) for d in data] if args.summary or args.table else [(d['loss'], d) for d in
-                                                                                            data]
+            data = [(d['loss'], d, file, training_settings) for d in data] if args.summary or args.table else [
+                (d['loss'], d) for d in
+                data]
         else:
             data = [(d[0], d[1], file) for d in data] if args.summary or args.table else data
 
@@ -171,7 +172,24 @@ if __name__ == '__main__':
             with open('task2_best_models.txt', 'w') as f:
                 json.dump(tasks, f)
         else:
-            pass
+            for key, entry in model_to_result.items():
+                task = dict()
+                task['name'] = get_model_name(entry[2])
+                task['params'] = entry[1]['config'].copy()
+                task['settings'] = entry[3]
+                print(task['params'], entry[1]['extra']['num_epochs'])
+                if 'epochs' in entry[1]:
+                    task['settings']['train_epochs'] = entry[1]['epochs']
+                task['model_desc'] = '{0}_{1}_{2}'.format(task['name'],
+                                                          '_'.join(['{0}={1}'.format(a, b) for a, b in
+                                                                    zip(task['params'].keys(),
+                                                                        task['params'].values())]),
+                                                          '_'.join(['{0}={1}'.format(a, b) for a, b in
+                                                                    zip(task['settings'].keys(),
+                                                                        task['settings'].values())]))
+                tasks.append(task)
+            with open('task3_best_models.txt', 'w') as f:
+                json.dump(tasks, f)
 
         losses = [entry[0] for entry in model_to_result.values()]
         extras = None
@@ -210,7 +228,9 @@ if __name__ == '__main__':
 
         if args.rnn:
             var_input_losses = [e['cv_test'] for e in extras]
-            frame = get_pd_frame_task3(losses, var_input_losses, params, estimators)
+            frame = get_pd_frame_task3(losses, var_input_losses,
+                                       ['rnd' for _ in range(len(var_input_losses))],
+                                       params, estimators)
             frame.to_csv('task3_table.csv')
             print(frame)
         else:

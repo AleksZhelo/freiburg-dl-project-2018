@@ -1,7 +1,21 @@
 import os
+import argparse
 
 import numpy as np
 import pandas as pd
+
+
+def parse_task_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--tasks_file',
+        type=str,
+        required=True,
+        help='The tasks description file to process.'
+    )
+
+    return parser.parse_args()
 
 
 def ensure_dir(directory):
@@ -60,7 +74,7 @@ def loss(y_hat, y):
     return np.mean(np.power(y_hat - y, 2))
 
 
-def task2_model_from_name(models, name):
+def model_from_name(models, name):
     for model in models:
         if model.__name__.lower() == name.lower():
             return model
@@ -104,8 +118,9 @@ def get_pd_frame_task2(losses, configs, estimators):
     return pd.DataFrame(data, index=estimators)
 
 
-def get_pd_frame_task3(losses_mean, var_input_losses, configs, estimators):
+def get_pd_frame_task3(losses_mean, var_input_losses, n_train, configs, estimators):
     data = {
+        'n_train': n_train,
         'loss_mean': losses_mean,
         '5 points': [v[0] for v in var_input_losses],
         '10 points': [v[1] for v in var_input_losses],

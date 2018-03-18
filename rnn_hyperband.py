@@ -14,6 +14,8 @@ import tensorflow as tf
 from hyperband.hyperband import Hyperband
 from models.rnn.lstm_tf_decov import LSTM_TF_DeCov
 from models.rnn.lstm_tf_decov_mlp_init import LSTM_TF_DeCov_MLP_init
+from models.rnn.lstm_tf_decov_mlp_init_both import LSTM_TF_DeCov_MLP_init_both
+from models.rnn.lstm_tf_decov_mlp_init_cell import LSTM_TF_DeCov_MLP_init_cell
 from models.rnn.lstm_tf_mlp_init import LSTM_TF_MLP_init
 from run_rnn_model import run_rnn_model
 from util.common import ensure_dir, date2str
@@ -76,7 +78,8 @@ if __name__ == '__main__':
     patience = 250
     run_time = 1 * 3600
 
-    model = LSTM_TF_MLP_init
+    model = LSTM_TF_DeCov_MLP_init_both
+    # model = LSTM_TF_MLP_init
     # model = LSTM_TF_DeCov_MLP_init
     # model = LSTM_TF_DeCov
     # model = LSTM_TF_Dropout
