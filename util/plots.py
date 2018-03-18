@@ -42,9 +42,9 @@ def extrapolation(true_curve,
         extra_curve = list(extrapolation[1])
         extra_len = len(extra_curve)
         # add last point of true curve to predicted curve:
-        if extra_len <= len(true_curve):
-            extra_curve = [true_curve[n_steps - extra_len - 1]] + extra_curve
-            extra_len += 1
+        # if extra_len <= len(true_curve):
+        #     extra_curve = [true_curve[n_steps - extra_len - 1]] + extra_curve
+        #     extra_len += 1
         plt.plot(range(n_steps - extra_len, n_steps), extra_curve, color=colors[(i + 1) % len(colors)])
 
     # vertical lines

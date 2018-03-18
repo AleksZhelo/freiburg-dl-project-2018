@@ -8,7 +8,7 @@ from sklearn.ensemble import GradientBoostingRegressor, ExtraTreesRegressor, Ada
 # noinspection PyUnresolvedReferences
 from sklearn.svm import SVR
 # noinspection PyUnresolvedReferences
-from sklearn import linear_model
+from sklearn.linear_model import LinearRegression
 
 from sklearn.model_selection import KFold
 
@@ -24,7 +24,7 @@ estimators = [
     'GradientBoostingRegressor(learning_rate=0.033, n_estimators=300)',
     # 'linear_model.SGDRegressor(loss=\'squared_loss\')',
     # 'linear_model.SGDRegressor(loss=\'epsilon_insensitive\', epsilon=0.005)',
-    'linear_model.LinearRegression()',
+    'LinearRegression()',
     # 'linear_model.Ridge(alpha=0.1)',
     'RandomForestRegressor(n_estimators=30)',
     # 'SVR(C=2.0, kernel=\'linear\', epsilon=0.005)',
@@ -80,4 +80,5 @@ for m_idx, model_desc in enumerate(estimators):
     print('mean CV performance: {0} \n'.format(np.round(performances[m_idx].mean(axis=0), 6)))
 
 frame = print_pd_frame_from_multi_input_performances(performances, [e.split('(')[0] for e in estimators])
-frame.to_csv('fixed_baseline.csv')
+frame = frame.sort_values('loss_mean')
+frame.to_latex('out/task3_point2_baselines.tex')

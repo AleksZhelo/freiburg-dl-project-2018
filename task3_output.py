@@ -68,19 +68,18 @@ if __name__ == '__main__':
         curve_hat = [c_h[idx] for c_h in curve_hat]
         curve_100_hat = curve_100_hat[idx]
 
-        errors_10 = curve[:, -1] - curve_hat[1][:, -1]
-        np.savetxt('{0}_{1}_errors.txt'.format(estimators[i], n_input[i]), errors_10)
+        # errors_10 = curve[:, -1] - curve_hat[1][:, -1]
+        # np.savetxt('{0}_{1}_errors.txt'.format(estimators[i], n_input[i]), errors_10)
 
         # save_scatter_plot(curve[:, -1], curve_hat[n_test_idx][:, -1], np.round(res[2][n_test_idx], 6),
         #                   '{0}_{1}_from_{2}'.format(estimators[i], n_input[i], n_test[n_test_idx]),
         #                   scatter_plots_dir)
-        #
-        # for c_num in [0, 10, 100, 200, 250]:
-        #     save_extrapolation_plot(curve[0], [(str(n_test[j]), curve_hat[j][0][n_test[j]:]) for j in range(len(n_test))],
-        # save_extrapolation_plot(curve[c_num], [(str(n_test[j]), curve_hat[j][c_num]) for j in range(len(n_test))],
-        #                         40, '{0}_{1} curve {2:03}'.format(estimators[i], n_input[i], c_num),
-        #                         os.path.join(extrapolation_plots_dir, str(c_num)))
-        #
-        # save_extrapolation_plot(curve[c_num], [('40', curve_100_hat[c_num])],
-        #                         100, '{0}_{1} curve {2:03} pred_100'.format(estimators[i], n_input[i], c_num),
-        #                         os.path.join(extrapolation_100_plots_dir, str(c_num)))
+
+        for c_num in [0, 10, 100, 200, 250]:
+            save_extrapolation_plot(curve[c_num], [(str(n_test[j]), curve_hat[j][c_num], n_test[j]) for j in range(len(n_test))],
+                                    40, '{0}_{1} curve {2:03}'.format(estimators[i], n_input[i], c_num),
+                                    os.path.join(extrapolation_plots_dir, str(c_num)))
+
+            save_extrapolation_plot(curve[c_num], [('40', curve_100_hat[c_num], 40)],
+                                    100, '{0}_{1} curve {2:03} pred_100'.format(estimators[i], n_input[i], c_num),
+                                    os.path.join(extrapolation_100_plots_dir, str(c_num)))

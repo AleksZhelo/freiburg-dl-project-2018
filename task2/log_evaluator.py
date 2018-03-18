@@ -1,6 +1,7 @@
 from json import JSONDecodeError
 
 import numpy as np
+import pandas as pd
 import json
 import argparse
 import os
@@ -113,9 +114,13 @@ if __name__ == '__main__':
             if 'LSTM' in os.path.basename(file):
                 training_settings = data[-1]
                 data = data[:-1]
-            data = [(d['loss'], d, file, training_settings) for d in data] if args.summary or args.table else [
-                (d['loss'], d) for d in
-                data]
+                data = [(d['loss'], d, file, training_settings) for d in data] if args.summary or args.table else [
+                    (d['loss'], d) for d in
+                    data]
+            else:
+                data = [(d['loss'], d, file) for d in data] if args.summary or args.table else [
+                    (d['loss'], d) for d in
+                    data]
         else:
             data = [(d[0], d[1], file) for d in data] if args.summary or args.table else data
 
@@ -177,7 +182,6 @@ if __name__ == '__main__':
                 task['name'] = get_model_name(entry[2])
                 task['params'] = entry[1]['config'].copy()
                 task['settings'] = entry[3]
-                print(task['params'], entry[1]['extra']['num_epochs'])
                 if 'epochs' in entry[1]:
                     task['settings']['train_epochs'] = entry[1]['epochs']
                 task['model_desc'] = '{0}_{1}_{2}'.format(task['name'],
@@ -235,5 +239,10 @@ if __name__ == '__main__':
             print(frame)
         else:
             frame = get_pd_frame_task2(losses, params, estimators)
+            pd.set_option('display.height', 1000)
+            pd.set_option('display.max_rows', 500)
+            pd.set_option('display.max_columns', 500)
+            pd.set_option('display.width', 1000)
+            pd.set_option('display.max_colwidth', 1000)
             frame.to_latex('../reports/task2_table.tex')
             print(frame)
