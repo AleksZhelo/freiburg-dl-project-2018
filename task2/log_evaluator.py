@@ -60,11 +60,13 @@ def collect_best_results_per_model(total_data):
             if 'config' in entry[1]:
                 entry[1] = entry[1]['config']
 
-        if 'exponential_decay' in entry[1] and entry[1]['exponential_decay']:
-            model += ' with lr decay'
-            if 'decay_rate' in entry[1]:
-                model += ' tf'
         model = model.lower()
+
+        if not args.rnn:
+            if '_' in model:
+                model = model[model.index('_') + 1:]
+            else:
+                model = 'None'
 
         if model in model_to_result:
             if model_to_result[model][0] > entry[0]:
@@ -174,7 +176,7 @@ if __name__ == '__main__':
                     task['batch_size'] = task['params']['batch_size']
                     del task['params']['batch_size']
                 tasks.append(task)
-            with open('task2_best_models.txt', 'w') as f:
+            with open('../out/task2_best_models.txt', 'w') as f:
                 json.dump(tasks, f)
         else:
             for key, entry in model_to_result.items():
@@ -192,7 +194,7 @@ if __name__ == '__main__':
                                                                     zip(task['settings'].keys(),
                                                                         task['settings'].values())]))
                 tasks.append(task)
-            with open('task3_best_models.txt', 'w') as f:
+            with open('../out/task3_best_models.txt', 'w') as f:
                 json.dump(tasks, f)
 
         losses = [entry[0] for entry in model_to_result.values()]
@@ -235,7 +237,7 @@ if __name__ == '__main__':
             frame = get_pd_frame_task3(losses, var_input_losses,
                                        ['rnd' for _ in range(len(var_input_losses))],
                                        params, estimators)
-            frame.to_csv('task3_table.csv')
+            frame.to_csv('../out/task3_table.csv')
             print(frame)
         else:
             frame = get_pd_frame_task2(losses, params, estimators)
@@ -244,5 +246,5 @@ if __name__ == '__main__':
             pd.set_option('display.max_columns', 500)
             pd.set_option('display.width', 1000)
             pd.set_option('display.max_colwidth', 1000)
-            frame.to_latex('../reports/task2_table.tex')
+            frame.to_latex('../out/task2_table.tex')
             print(frame)
