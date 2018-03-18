@@ -46,17 +46,18 @@ def extrapolation(true_curve,
             extra_curve = [true_curve[n_steps - extra_len - 1]] + extra_curve
             extra_len += 1
         plt.plot(range(n_steps - extra_len, n_steps), extra_curve, color=colors[(i + 1) % len(colors)])
-    
+
     # vertical lines
     y_limits = plt.gca().get_ylim()
     for i, extrapolation in enumerate(extrapolation_list):
-        plt.vlines([extrapolation[2]], 0, 1, colors=[colors[i + 1]], linestyles="dashed")
+        plt.vlines([extrapolation[2]], 0, 1, colors=[colors[i + 1]],
+                   linestyles="dashed", dashes=[(5, [5, 10])])
     plt.ylim(y_limits)
-    
+
     # axis labels
     plt.xlabel("epoch")
     plt.ylabel("validation error")
-    
+
     # legend
     if true_curve[-1] > 0.8:
         legend_pos = "lower right"
@@ -64,11 +65,11 @@ def extrapolation(true_curve,
         legend_pos = "upper right"
     plt.legend(["true"] + [extra[0] for extra in extrapolation_list],
                loc = legend_pos)
-    
+
     # title
     if title != None:
         plt.title(title)
-    
+
     # save plot
     if file_name != None:
         plt.savefig(file_name)
@@ -111,15 +112,15 @@ if __name__ == "__main__":
     y = np.random.uniform(size=n)
     y_hat = np.random.uniform(size=n)
     y_hat2 = np.random.uniform(size=n)
-    
+
     plt.figure(0)
     scatter(y, y_hat, "test title")
-    
+
     plt.figure(1)
     extrapolation(y[:50],
                   [("90 steps", y_hat2[-90:], 10),
                    ("50 steps", y_hat[-50:], 50)],
                   n_steps=100)
-    
+
     plt.figure(2)
     boxplot([("test", [y[i] - y_hat[i] for i in range(n)])])
